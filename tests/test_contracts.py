@@ -3,26 +3,40 @@ from datetime import datetime
 from typing import Literal
 
 import pytest
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 
 ClaimType = Literal["fact", "bank_view", "ai_inference", "unknown"]
+INSUFFICIENT_DATA = "Недостаточно данных для персонального заключения"
 
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class Provenance(StrictModel):
+    source_id: str
+    field_or_fragment: str
+    timestamp: datetime
+
+    @field_validator("timestamp")
+    @classmethod
+    def timestamp_must_have_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("timestamp must include a timezone")
+        return value
+
+
 class Claim(StrictModel):
     claim_type: ClaimType
     text: str
-    provenance: str | None = None
+    provenance: Provenance
 
 
 class AnalysisBlock(StrictModel):
     text: str
     claim_type: ClaimType
-    provenance: str
+    provenance: Provenance
 
 
 class ModelMetadata(StrictModel):
@@ -40,7 +54,21 @@ class InsightResponse(StrictModel):
     summary: str
     why_it_matters: str
     analysis_blocks: list[AnalysisBlock]
+    risks: list[str]
+    opportunities: list[str]
+    recommended_actions: list[str]
+    uncertainties: Literal[
+                       "Недостаточно данных для персонального заключения"
+                   ] | None
     model_metadata: ModelMetadata
+
+
+def valid_provenance() -> dict:
+    return {
+        "source_id": "NEWS-test-001",
+        "field_or_fragment": "paragraph_1",
+        "timestamp": "2026-10-20T12:30:00+03:00",
+    }
 
 
 def valid_insight_response() -> dict:
@@ -56,14 +84,22 @@ def valid_insight_response() -> dict:
             {
                 "text": "В новости сообщается об изменении условий.",
                 "claim_type": "fact",
-                "provenance": "news_item",
+                "provenance": valid_provenance(),
             },
             {
                 "text": "Это может повлиять на расходы компании.",
                 "claim_type": "ai_inference",
-                "provenance": "orchestrator_calculation",
+                "provenance": {
+                    "source_id": "BANKDOC-test-001",
+                    "field_or_fragment": "credit_conditions",
+                    "timestamp": "2026-10-20T12:30:00Z",
+                },
             },
         ],
+        "risks": [],
+        "opportunities": [],
+        "recommended_actions": [],
+        "uncertainties": INSUFFICIENT_DATA,
         "model_metadata": {
             "model_name": "DeepSeek-V4.1-Flash",
             "cost_rub": 0.45,
@@ -77,24 +113,52 @@ def test_claim_accepts_all_supported_types():
         claim = Claim(
             claim_type=claim_type,
             text="Example claim",
-            provenance="news_item",
+            provenance=valid_provenance(),
         )
         assert claim.claim_type == claim_type
 
 
 def test_claim_rejects_unknown_type():
     with pytest.raises(ValidationError):
-        Claim(claim_type="guess", text="Example claim")
+        Claim(
+            claim_type="guess",
+            text="Example claim",
+            provenance=valid_provenance(),
+        )
 
 
-def test_claim_allows_missing_provenance():
-    claim = Claim(claim_type="unknown", text="Not enough evidence")
-    assert claim.provenance is None
+def test_claim_requires_structured_provenance():
+    with pytest.raises(ValidationError):
+        Claim(claim_type="unknown", text="Not enough evidence")
 
 
-def test_iso_timestamp_can_be_parsed_with_timezone():
-    timestamp = datetime.fromisoformat("2026-10-20T12:30:00+03:00")
-    assert timestamp.tzinfo is not None
+def test_provenance_accepts_timezone_aware_timestamp():
+    provenance = Provenance.model_validate(valid_provenance())
+    assert provenance.timestamp.tzinfo is not None
+
+
+def test_provenance_rejects_timestamp_without_timezone():
+    payload = valid_provenance()
+    payload["timestamp"] = "2026-10-20T12:30:00"
+
+    with pytest.raises(ValidationError):
+        Provenance.model_validate(payload)
+
+
+def test_provenance_rejects_missing_required_field():
+    payload = valid_provenance()
+    del payload["source_id"]
+
+    with pytest.raises(ValidationError):
+        Provenance.model_validate(payload)
+
+
+def test_provenance_rejects_unexpected_field():
+    payload = valid_provenance()
+    payload["source_type"] = "news"
+
+    with pytest.raises(ValidationError):
+        Provenance.model_validate(payload)
 
 
 def test_insight_response_accepts_proposed_contract():
@@ -102,8 +166,21 @@ def test_insight_response_accepts_proposed_contract():
 
     assert response.schema_version == "2.1.0"
     assert response.company_id == "SYNTHETIC_U"
+    assert response.event_id == "EVENT-test-001"
     assert response.analysis_blocks[0].claim_type == "fact"
+    assert response.analysis_blocks[0].provenance.source_id == "NEWS-test-001"
+    assert response.risks == []
+    assert response.opportunities == []
+    assert response.recommended_actions == []
     assert response.model_metadata.cache_hit is False
+
+
+def test_insight_response_allows_null_uncertainties():
+    payload = valid_insight_response()
+    payload["uncertainties"] = None
+
+    response = InsightResponse.model_validate(payload)
+    assert response.uncertainties is None
 
 
 def test_insight_response_rejects_unknown_claim_type():
@@ -117,6 +194,14 @@ def test_insight_response_rejects_unknown_claim_type():
 def test_insight_response_rejects_missing_required_field():
     payload = valid_insight_response()
     del payload["why_it_matters"]
+
+    with pytest.raises(ValidationError):
+        InsightResponse.model_validate(payload)
+
+
+def test_insight_response_rejects_missing_new_contract_field():
+    payload = valid_insight_response()
+    del payload["recommended_actions"]
 
     with pytest.raises(ValidationError):
         InsightResponse.model_validate(payload)
@@ -136,6 +221,7 @@ def test_model_metadata_rejects_negative_cost():
 
     with pytest.raises(ValidationError):
         InsightResponse.model_validate(payload)
+
 
 class ApiErrorDetail(StrictModel):
     code: str
@@ -191,3 +277,18 @@ def test_api_error_rejects_unexpected_fields():
 
     with pytest.raises(ValidationError):
         ApiErrorResponse.model_validate(payload)
+
+def test_insight_response_rejects_unknown_uncertainties():
+    payload = valid_insight_response()
+    payload["uncertainties"] = "Какая-то другая причина"
+
+    with pytest.raises(ValidationError):
+        InsightResponse.model_validate(payload)
+
+
+def test_insight_response_accepts_canonical_uncertainties():
+    payload = valid_insight_response()
+    payload["uncertainties"] = INSUFFICIENT_DATA
+
+    response = InsightResponse.model_validate(payload)
+    assert response.uncertainties == INSUFFICIENT_DATA
