@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="Inter, Segoe UI, sans-serif" font-size="14">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5f6673"/>
+    </marker>
+    <style>
+      .box { fill:#fff; stroke:#c9ced6; stroke-width:1.5; rx:10; }
+      .svc { fill:#f5f6f8; }
+      .accent { stroke:#ef3124; stroke-width:2; }
+      .label { fill:#14161a; font-weight:600; }
+      .sub { fill:#5f6673; font-size:12px; }
+      .edge { stroke:#5f6673; stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+      .dash { stroke-dasharray:5 4; }
+    </style>
+  </defs>
+
+  <rect x="360" y="20" width="240" height="64" rx="10" class="box accent"/>
+  <text x="480" y="48" text-anchor="middle" class="label">frontend</text>
+  <text x="480" y="68" text-anchor="middle" class="sub">SPA · лента · инсайт · сравнение</text>
+
+  <rect x="380" y="130" width="200" height="64" rx="10" class="box accent"/>
+  <text x="480" y="158" text-anchor="middle" class="label">api gateway</text>
+  <text x="480" y="178" text-anchor="middle" class="sub">auth · права · request_id</text>
+
+  <rect x="20"  y="250" width="210" height="70" rx="10" class="box svc"/>
+  <text x="125" y="280" text-anchor="middle" class="label">profile</text>
+  <text x="125" y="300" text-anchor="middle" class="sub">CSV · признаки · связи</text>
+
+  <rect x="250" y="250" width="210" height="70" rx="10" class="box svc"/>
+  <text x="355" y="280" text-anchor="middle" class="label">ingestion</text>
+  <text x="355" y="300" text-anchor="middle" class="sub">новости · PDF · дедуп</text>
+
+  <rect x="480" y="250" width="210" height="70" rx="10" class="box svc"/>
+  <text x="585" y="280" text-anchor="middle" class="label">ranking</text>
+  <text x="585" y="300" text-anchor="middle" class="sub">поиск · скор · объяснение</text>
+
+  <rect x="710" y="250" width="230" height="70" rx="10" class="box accent"/>
+  <text x="825" y="280" text-anchor="middle" class="label">agent</text>
+  <text x="825" y="300" text-anchor="middle" class="sub">план → инструменты → критик</text>
+
+  <rect x="250" y="410" width="220" height="64" rx="10" class="box svc"/>
+  <text x="360" y="438" text-anchor="middle" class="label">PostgreSQL</text>
+  <text x="360" y="458" text-anchor="middle" class="sub">профили · события · инсайты</text>
+
+  <rect x="500" y="410" width="220" height="64" rx="10" class="box svc"/>
+  <text x="610" y="438" text-anchor="middle" class="label">Redis / индекс</text>
+  <text x="610" y="458" text-anchor="middle" class="sub">кеш · поиск</text>
+
+  <rect x="750" y="410" width="190" height="64" rx="10" class="box"/>
+  <text x="845" y="438" text-anchor="middle" class="label">LLM</text>
+  <text x="845" y="458" text-anchor="middle" class="sub">plan / synth / critic</text>
+
+  <path class="edge" d="M480 84 L480 128"/>
+  <path class="edge" d="M430 194 L125 248"/>
+  <path class="edge" d="M455 194 L355 248"/>
+  <path class="edge" d="M505 194 L585 248"/>
+  <path class="edge" d="M540 194 L825 248"/>
+  <path class="edge dash" d="M125 320 L340 408"/>
+  <path class="edge dash" d="M355 320 L358 408"/>
+  <path class="edge dash" d="M585 320 L600 408"/>
+  <path class="edge dash" d="M825 320 L845 408"/>
+</svg>

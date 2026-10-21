@@ -1,0 +1,48 @@
+{
+  "insight_id": "ins_001",
+  "company_id": "cmp_001",
+  "event_id": "evt_001",
+  "title": "Рост пошлин может снизить экспортную маржу",
+  "reference": "Повышение экспортных пошлин на металлопрокат",
+  "audience": "cfo",
+  "claims": [
+    {
+      "claim_id": "clm_001",
+      "text": "Экспортные пошлины на металлопрокат повышаются с 2027 года.",
+      "claim_type": "fact",
+      "confidence": 0.95,
+      "provenance": [
+        {
+          "source_id": "news_001",
+          "source_name": "Деловой портал",
+          "url": "https://example.com/news/001",
+          "published_at": "2026-10-15T08:30:00Z",
+          "fragment": "Правительство утвердило повышение экспортных пошлин на металлопрокат.",
+          "retrieved_at": "2026-10-15T09:00:00Z"
+        }
+      ]
+    },
+    {
+      "claim_id": "clm_002",
+      "text": "Компания выпускает сортовой прокат, поэтому рост пошлин затронет выручку.",
+      "claim_type": "inference",
+      "confidence": 0.7,
+      "provenance": [
+        {
+          "source_id": "profile:cmp_001",
+          "source_name": "profile",
+          "url": null,
+          "published_at": null,
+          "fragment": "products: сортовой прокат, трубы",
+          "retrieved_at": "2026-10-15T09:00:00Z"
+        }
+      ]
+    }
+  ],
+  "questions": [
+    "Насколько велика экспортная доля выручки?",
+    "Кто из контрагентов сильнее всего затронут?"
+  ],
+  "confidence": 0.78,
+  "generated_at": "2026-10-15T09:05:00Z"
+}

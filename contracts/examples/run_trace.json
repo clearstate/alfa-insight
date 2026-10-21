@@ -1,0 +1,67 @@
+{
+  "run_id": "run_001",
+  "company_id": "cmp_001",
+  "event_id": "evt_001",
+  "schema_version": "0.1.0",
+  "model_versions": { "synth": "stub", "critic": "stub" },
+  "prompt_versions": { "plan": "1", "synth": "1", "critic": "1" },
+  "critic_passed": true,
+  "total_duration_ms": 1840,
+  "steps": [
+    {
+      "step": 1,
+      "kind": "plan",
+      "name": "plan",
+      "status": "ok",
+      "started_at": "2026-10-15T09:05:00Z",
+      "duration_ms": 300,
+      "input": { "company_id": "cmp_001" },
+      "output": { "steps": ["get_company_profile", "search_events"] },
+      "error": null
+    },
+    {
+      "step": 2,
+      "kind": "tool",
+      "name": "get_company_profile",
+      "status": "ok",
+      "started_at": "2026-10-15T09:05:00Z",
+      "duration_ms": 120,
+      "input": { "company_id": "cmp_001" },
+      "output": { "completeness": 0.85 },
+      "error": null
+    },
+    {
+      "step": 3,
+      "kind": "tool",
+      "name": "search_events",
+      "status": "ok",
+      "started_at": "2026-10-15T09:05:01Z",
+      "duration_ms": 400,
+      "input": { "top_k": 20 },
+      "output": { "events": 12 },
+      "error": null
+    },
+    {
+      "step": 4,
+      "kind": "synthesis",
+      "name": "synth",
+      "status": "ok",
+      "started_at": "2026-10-15T09:05:01Z",
+      "duration_ms": 800,
+      "input": null,
+      "output": { "claims": 2 },
+      "error": null
+    },
+    {
+      "step": 5,
+      "kind": "critic",
+      "name": "critic",
+      "status": "ok",
+      "started_at": "2026-10-15T09:05:02Z",
+      "duration_ms": 220,
+      "input": null,
+      "output": { "passed": true },
+      "error": null
+    }
+  ]
+}

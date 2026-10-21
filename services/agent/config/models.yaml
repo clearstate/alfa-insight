@@ -1,0 +1,21 @@
+# Маршрутизация моделей и лимиты. Значения по умолчанию; переопределяются .env.
+defaults:
+  timeout_seconds: 60
+  max_retries: 2
+roles:
+  plan:
+    model_env: LLM_MODEL_PLAN
+    max_tokens: 2000
+    temperature: 0.0
+  synth:
+    model_env: LLM_MODEL_SYNTH
+    max_tokens: 4000
+    temperature: 0.2
+  critic:
+    model_env: LLM_MODEL_CRITIC
+    max_tokens: 2000
+    temperature: 0.0
+  followup:
+    model_env: LLM_MODEL_SYNTH
+    max_tokens: 2000
+    temperature: 0.3

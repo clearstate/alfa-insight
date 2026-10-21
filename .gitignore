@@ -218,3 +218,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- alfa-insight ---
+.env
+.env.*
+!.env.example
+data/raw/
+node_modules/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.venv/
+playwright-report/
+test-results/
+*.log
+.DS_Store

@@ -1,0 +1,24 @@
+/* Дизайн-токены. Все цвета/размеры берутся отсюда, не из компонентов напрямую. */
+:root {
+  --color-bg: #ffffff;
+  --color-bg-muted: #f5f6f8;
+  --color-text: #14161a;
+  --color-text-muted: #5f6673;
+  --color-border: #e3e6eb;
+  --color-accent: #ef3124; /* брендовый красный */
+  --color-accent-text: #ffffff;
+
+  /* claim_type */
+  --claim-fact: #1f7a4d;
+  --claim-inference: #2a5bd7;
+  --claim-recommendation: #9a5b00;
+  --claim-estimate: #7a4bbd;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --radius: 8px;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
