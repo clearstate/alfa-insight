@@ -1,14 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "alfa-insight"
 version = "0.1.0"
 description = "AI-powered personalized business news analytics"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.14"
 license = { file = "LICENSE" }
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "pydantic>=2.10,<3.0",
+  "uvicorn>=0.30,<1.0",
+]
 
-# Workspace-пакет: сами сервисы объявляют зависимости в своих pyproject.toml
-# и подключаются сюда как editable-зависимости (uv workspaces / path-зависимости).
-dependencies = []
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0,<10.0",
+  "httpx>=0.27,<1.0",
+]
 
 [dependency-groups]
 dev = [
@@ -23,6 +34,9 @@ dev = [
   "pyyaml",
 ]
 
+[tool.setuptools.packages.find]
+where = ["backend/src"]
+
 [tool.uv.workspace]
 members = [
   "services/api",
@@ -35,7 +49,7 @@ members = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["services", "scripts", "tests"]
+src = ["backend/src", "services", "scripts", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
@@ -51,5 +65,5 @@ asyncio_mode = "auto"
 addopts = "-q"
 
 [tool.coverage.run]
-source = ["services"]
+source = ["backend/src", "services"]
 omit = ["*/tests/*"]
