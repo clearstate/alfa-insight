@@ -1,0 +1,710 @@
+{
+ "budget_balance": {
+  "2026": {
+   "value": -5.8,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": -5.0,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "budget_expenditure": {
+  "2026": {
+   "value": 45.8,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 46.9,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "budget_revenue": {
+  "2026": {
+   "value": 40.0,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 41.9,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "cny_rub_eoy": {
+  "2026": {
+   "value": 13.0,
+   "unit": "конец года, руб./юань",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  },
+  "2027": {
+   "value": 13.8,
+   "unit": "конец года, руб./юань",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  }
+ },
+ "corp_credit_growth": {
+  "2026": {
+   "value": 13.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 10.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "corp_deposits_growth": {
+  "2026": {
+   "value": 13.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 9.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "current_account": {
+  "2026": {
+   "value": 45.0,
+   "unit": "$ млрд",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 18.0,
+   "unit": "$ млрд",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "export_usd": {
+  "2026": {
+   "value": 480.0,
+   "unit": "$ млрд",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 450.0,
+   "unit": "$ млрд",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "gdp_growth": {
+  "2026": {
+   "value": 0.1,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 0.3,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "gdp_nominal": {
+  "2026": {
+   "value": 227.7,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 239.1,
+   "unit": "трлн руб.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "import_usd": {
+  "2026": {
+   "value": 410.0,
+   "unit": "$ млрд",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 420.0,
+   "unit": "$ млрд",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "industrial_production": {
+  "2026": {
+   "value": 0.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2026-07": {
+   "value": 0.1,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2026-08": {
+   "value": 0.2,
+   "unit": "% г/г",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": []
+  },
+  "2027": {
+   "value": 0.6,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "inflation_avg_yoy": {
+  "2026": {
+   "value": 6.4,
+   "unit": "%, г/г среднегодовая",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  },
+  "2027": {
+   "value": 6.4,
+   "unit": "%, г/г среднегодовая",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  }
+ },
+ "inflation_dec_yoy": {
+  "2026": {
+   "value": 7.5,
+   "unit": "% дек./дек.",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  },
+  "2027": {
+   "value": 5.5,
+   "unit": "% дек./дек.",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  }
+ },
+ "investment_growth": {
+  "2026": {
+   "value": -4.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 0.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "key_rate_avg": {
+  "2026": {
+   "value": 14.6,
+   "unit": "среднегодовая, %",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": [
+    {
+     "value": 14.5,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    },
+    {
+     "value": 14.5,
+     "published_at": "2026-09-07T00:00:00+00:00",
+     "item_id": "news_2ea2421b4071ec0c4fc0"
+    }
+   ]
+  },
+  "2027": {
+   "value": 13.0,
+   "unit": "среднегодовая, %",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": [
+    {
+     "value": 12.6,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    },
+    {
+     "value": 12.5,
+     "published_at": "2026-09-07T00:00:00+00:00",
+     "item_id": "news_2ea2421b4071ec0c4fc0"
+    }
+   ]
+  }
+ },
+ "key_rate_eoy": {
+  "2026": {
+   "value": 14.0,
+   "unit": "конец года, %",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": [
+    {
+     "value": 13.5,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    },
+    {
+     "value": 13.5,
+     "published_at": "2026-09-07T00:00:00+00:00",
+     "item_id": "news_2ea2421b4071ec0c4fc0"
+    }
+   ]
+  },
+  "2027": {
+   "value": 12.0,
+   "unit": "конец года, %",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  }
+ },
+ "key_rate_path": {
+  "2026-09": {
+   "value": 14.0,
+   "unit": "%",
+   "published_at": "2026-08-05T00:00:00+00:00",
+   "item_id": "news_22749d7d6e08195eac6c",
+   "page": 2,
+   "superseded": []
+  },
+  "2026-10": {
+   "value": 14.0,
+   "unit": "%",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 3,
+   "superseded": [
+    {
+     "value": 13.75,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    },
+    {
+     "value": 13.75,
+     "published_at": "2026-08-05T00:00:00+00:00",
+     "item_id": "news_22749d7d6e08195eac6c"
+    }
+   ]
+  },
+  "2026-12": {
+   "value": 14.0,
+   "unit": "%",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 3,
+   "superseded": [
+    {
+     "value": 13.5,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    },
+    {
+     "value": 13.5,
+     "published_at": "2026-08-05T00:00:00+00:00",
+     "item_id": "news_22749d7d6e08195eac6c"
+    }
+   ]
+  },
+  "2027-12": {
+   "value": 12.0,
+   "unit": "%",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 3,
+   "superseded": []
+  }
+ },
+ "mortgage_growth": {
+  "2026": {
+   "value": 6.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 10.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "oil_urals": {
+  "2026": {
+   "value": 63.0,
+   "unit": "$/барр.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 60.0,
+   "unit": "$/барр.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "retail_credit_growth": {
+  "2026": {
+   "value": 5.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2026-07": {
+   "value": 6.1,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2026-08": {
+   "value": 6.2,
+   "unit": "% г/г",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": []
+  },
+  "2027": {
+   "value": 9.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "retail_deposits_growth": {
+  "2026": {
+   "value": 11.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2027": {
+   "value": 12.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "retail_turnover": {
+  "2026": {
+   "value": 3.3,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2026-07": {
+   "value": 5.5,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2026-08": {
+   "value": 3.5,
+   "unit": "% г/г",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": []
+  },
+  "2027": {
+   "value": 1.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "unemployment": {
+  "2026": {
+   "value": 2.3,
+   "unit": "%, конец года",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2026-07": {
+   "value": 2.2,
+   "unit": "%, к.п.",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2026-08": {
+   "value": 2.3,
+   "unit": "% к.п.",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": []
+  },
+  "2027": {
+   "value": 2.4,
+   "unit": "%, конец года",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "usd_rub_eoy": {
+  "2026": {
+   "value": 87.2,
+   "unit": "конец года, руб./$",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": []
+  },
+  "2027": {
+   "value": 93.0,
+   "unit": "конец года, руб./$",
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6",
+   "page": 2,
+   "superseded": [
+    {
+     "value": 95.0,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    },
+    {
+     "value": 95.0,
+     "published_at": "2026-09-07T00:00:00+00:00",
+     "item_id": "news_2ea2421b4071ec0c4fc0"
+    }
+   ]
+  }
+ },
+ "wages_nominal": {
+  "2026": {
+   "value": 10.2,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2026-06": {
+   "value": 9.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2026-07": {
+   "value": 9.0,
+   "unit": "% г/г",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": [
+    {
+     "value": 8.2,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    }
+   ]
+  },
+  "2026-08": {
+   "value": 8.5,
+   "unit": "% г/г",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": []
+  },
+  "2026-H1": {
+   "value": 12.4,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2027": {
+   "value": 8.0,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ },
+ "wages_real": {
+  "2026": {
+   "value": 3.6,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  },
+  "2026-06": {
+   "value": 2.8,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2026-07": {
+   "value": 2.8,
+   "unit": "% г/г",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": [
+    {
+     "value": 1.7,
+     "published_at": "2026-07-31T00:00:00+00:00",
+     "item_id": "news_12ae83f92b0e2797d81b"
+    }
+   ]
+  },
+  "2026-08": {
+   "value": 2.0,
+   "unit": "% г/г",
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0",
+   "page": 3,
+   "superseded": []
+  },
+  "2026-H1": {
+   "value": 6.3,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 1,
+   "superseded": []
+  },
+  "2027": {
+   "value": 1.5,
+   "unit": "% г/г",
+   "published_at": "2026-07-31T00:00:00+00:00",
+   "item_id": "news_12ae83f92b0e2797d81b",
+   "page": 4,
+   "superseded": []
+  }
+ }
+}

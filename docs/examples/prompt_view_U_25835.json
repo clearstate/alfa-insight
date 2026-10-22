@@ -1,0 +1,140 @@
+{
+  "company_ref": "client_company",
+  "industry": {
+    "okved_code": "45.31.1",
+    "okved_name": "Торговля оптовая автомобильными деталями, узлами и принадлежностями, кроме деятельности агентов",
+    "section": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов"
+  },
+  "region": "Москва",
+  "size": {
+    "revenue_magnitude": "~1e10",
+    "revenue_unit": "unknown (assumed RUB)",
+    "is_large_business": true,
+    "workers_fns": "Более 251",
+    "company_age": "16-25"
+  },
+  "client_type": "CLIENT",
+  "products": [
+    "rko",
+    "loans",
+    "leasing",
+    "payroll_project"
+  ],
+  "foreign_trade": {
+    "has_foreign_trade": true,
+    "countries": [
+      "ОАЭ",
+      "КИТАЙ",
+      "ИТАЛИЯ"
+    ],
+    "direction": "unknown"
+  },
+  "group": {
+    "size": 1,
+    "is_mega_group": false
+  },
+  "sensitivity_factors": [
+    {
+      "code": "rate_sensitivity",
+      "level": "high",
+      "confidence": "medium",
+      "rule_id": "rate_sensitivity_v1",
+      "rationale": "Есть продукты с процентной/кредитной составляющей (loans, leasing): изменения ключевой ставки и условий кредитования влияют на стоимость обслуживания и рефинансирования. Тип ставки (фиксированная/плавающая) и объём долга в данных неизвестны."
+    },
+    {
+      "code": "fx_and_trade_exposure",
+      "level": "high",
+      "confidence": "medium",
+      "rule_id": "fx_trade_v1",
+      "rationale": "Компания есть в данных ФТС (внешнеэкономическая деятельность), страны: ОАЭ, КИТАЙ, ИТАЛИЯ: курсы валют, санкции и логистика могут влиять на расчёты и поставки. Направление (импорт/экспорт) в данных неизвестно."
+    },
+    {
+      "code": "payroll_exposure",
+      "level": "high",
+      "confidence": "medium",
+      "rule_id": "payroll_v1",
+      "rationale": "Численность по ФНС: Более 251; есть зарплатный проект. Рынок труда и рост зарплат влияют на фонд оплаты труда."
+    },
+    {
+      "code": "counterparty_concentration",
+      "level": "low",
+      "confidence": "low",
+      "rule_id": "concentration_v1",
+      "rationale": "Эвристика: доля крупнейшего контрагента в видимом банку обороте (входящие: 0.0639, исходящие: 0.274). Это не доказательство зависимости: банк видит только часть платежей, период неизвестен."
+    },
+    {
+      "code": "supply_chain_industries",
+      "level": "info",
+      "confidence": "medium",
+      "rule_id": "supply_chain_v1",
+      "rationale": "Отрасли контрагентов по ОКВЭД (получатели исходящих платежей — вероятные поставщики, плательщики входящих — вероятные покупатели). Новости этих отраслей могут касаться компании через цепочку поставок. Учтены только контрагенты, присутствующие в данных."
+    }
+  ],
+  "supply_chain": {
+    "suppliers": [
+      {
+        "section": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+        "share_of_known": 0.5775
+      },
+      {
+        "section": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+        "share_of_known": 0.4088
+      },
+      {
+        "section": "Транспортировка и хранение",
+        "share_of_known": 0.0053
+      },
+      {
+        "section": "Транспортировка и хранение",
+        "share_of_known": 0.0026
+      },
+      {
+        "section": "Деятельность по операциям с недвижимым имуществом",
+        "share_of_known": 0.0024
+      }
+    ],
+    "customers": [
+      {
+        "section": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+        "share_of_known": 0.9036
+      },
+      {
+        "section": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+        "share_of_known": 0.0365
+      },
+      {
+        "section": "Транспортировка и хранение",
+        "share_of_known": 0.0192
+      },
+      {
+        "section": "Деятельность по операциям с недвижимым имуществом",
+        "share_of_known": 0.0174
+      },
+      {
+        "section": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+        "share_of_known": 0.0161
+      }
+    ],
+    "known_coverage_outgoing": 0.777,
+    "known_coverage_incoming": 0.507
+  },
+  "topics": [
+    "auto_market",
+    "consumer_credit",
+    "fx_rates",
+    "logistics",
+    "bond_market",
+    "credit_conditions",
+    "foreign_trade",
+    "key_rate",
+    "labor_market",
+    "sanctions"
+  ],
+  "data_gaps": [
+    "revenue_unit_unknown",
+    "no_dates",
+    "trade_direction_unknown",
+    "spark_missing",
+    "counterparty_attributes_missing"
+  ]
+}

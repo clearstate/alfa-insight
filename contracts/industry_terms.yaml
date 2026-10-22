@@ -1,0 +1,603 @@
+# Словарь «отраслевой термин -> префиксы ОКВЭД2». Владелец словаря — участник 1, файл в contracts/ (ревью участников 2, 4, 6).
+# Назначение: участник 2 размечает news_item.industries, участник 4 сопоставляет их с profile.industry.okved_levels
+# и с отраслями контрагентов (profile.sensitivity_factors[supply_chain_industries]).
+#
+# terms — нижний регистр, основы слов: совпадение = вхождение в лемматизированный текст (лемматизация — у участника 2).
+# ambiguous_terms — сами по себе отрасль НЕ задают, только вместе с другим термином записи.
+# verified: data       — префикс встречается в df_Uid_data_hack.csv, смысл сверен по MAINOKVED_NAME (example_okved);
+#           classifier — по ОКВЭД2 (ОК 029-2014), в данных кейса не встречается, смысл НЕ сверен с данными.
+# industry_rule — id правила в services/company_profile/config/feature_rules.yaml (темы профиля), null если правила нет.
+# Сгенерировано скриптом сверки с данными кейса; правки — PR с ревью участника 1.
+version: 1
+format: okved_prefix
+entries:
+- id: oil_gas
+  terms:
+  - нефть
+  - нефтян
+  - нефтегаз
+  - нефтепродукт
+  - добыча газа
+  - газодобыч
+  - топливо
+  okved_prefixes:
+  - prefix: '06'
+    verified: data
+    example_okved: 06.10.1 Добыча нефти
+    companies_in_data: 67
+  - prefix: '09.1'
+    verified: data
+    example_okved: 09.10 Предоставление услуг в области добычи нефти и природного газа
+    companies_in_data: 49
+  - prefix: '19.2'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  - prefix: '46.71'
+    verified: data
+    example_okved: 46.71 Торговля оптовая твердым, жидким и газообразным топливом и подобными продуктами
+    companies_in_data: 910
+  - prefix: '49.5'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  industry_rule: mining_energy
+  ambiguous_terms:
+  - газ
+  note: «газ» сам по себе неоднозначен (газ для ЖКХ, промышленные газы 20.11)
+- id: coal
+  terms:
+  - уголь
+  - угольн
+  okved_prefixes:
+  - prefix: '05'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  - prefix: 46.71.1
+    verified: data
+    example_okved: 46.71.1 Торговля оптовая твердым топливом
+    companies_in_data: 32
+  industry_rule: mining_energy
+- id: metals_mining
+  terms:
+  - металлург
+  - сталь
+  - стальн
+  - металлопрокат
+  - цветные металлы
+  - руда
+  - рудн
+  okved_prefixes:
+  - prefix: '07'
+    verified: data
+    example_okved: 07.29 Добыча руд прочих цветных металлов
+    companies_in_data: 380
+  - prefix: '24'
+    verified: data
+    example_okved: 24.33 Производство профилей с помощью холодной штамповки или гибки
+    companies_in_data: 27
+  - prefix: '46.72'
+    verified: data
+    example_okved: 46.72 Торговля оптовая металлами и металлическими рудами
+    companies_in_data: 448
+  industry_rule: metals
+- id: metal_products
+  terms:
+  - металлоконструкц
+  - металлоизделия
+  okved_prefixes:
+  - prefix: '25'
+    verified: data
+    example_okved: 25.1 Производство строительных металлических конструкций и изделий
+    companies_in_data: 853
+  industry_rule: metals
+- id: precious_metals
+  terms:
+  - золото
+  - золотодобыч
+  - драгметалл
+  - драгоценные металлы
+  okved_prefixes:
+  - prefix: 07.29.4
+    verified: data
+    example_okved: 07.29.4 Добыча руд и песков драгоценных металлов и руд редких металлов
+    companies_in_data: 333
+  - prefix: '24.41'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  - prefix: '32.12'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  industry_rule: precious_metals
+  note: 'Опт драгметаллами отдельного проверенного кода в данных нет: 46.72.2 — металлы в первичных формах'
+- id: chemicals
+  terms:
+  - химическ
+  - химпром
+  - удобрени
+  okved_prefixes:
+  - prefix: '20'
+    verified: data
+    example_okved: 20.11 Производство промышленных газов
+    companies_in_data: 240
+  industry_rule: chemicals_pharma
+- id: pharma
+  terms:
+  - фармацевт
+  - фарма
+  - лекарств
+  okved_prefixes:
+  - prefix: '21'
+    verified: data
+    example_okved: 21.20 Производство лекарственных препаратов и материалов, применяемых в медицинских целях и ветеринарии
+    companies_in_data: 99
+  - prefix: '46.46'
+    verified: data
+    example_okved: 46.46 Торговля оптовая фармацевтической продукцией
+    companies_in_data: 1149
+  industry_rule: chemicals_pharma
+- id: construction
+  terms:
+  - строительств
+  - стройк
+  - застройщик
+  - девелопер
+  - девелопмент
+  - инфраструктурн
+  okved_prefixes:
+  - prefix: '41'
+    verified: data
+    example_okved: 41.10 Разработка строительных проектов
+    companies_in_data: 5966
+  - prefix: '42'
+    verified: data
+    example_okved: 42.11 Строительство автомобильных дорог и автомагистралей
+    companies_in_data: 602
+  - prefix: '43'
+    verified: data
+    example_okved: 43.11 Разборка и снос зданий
+    companies_in_data: 1621
+  industry_rule: construction_real_estate
+- id: building_materials
+  terms:
+  - стройматериал
+  - цемент
+  - кирпич
+  - бетон
+  okved_prefixes:
+  - prefix: '23'
+    verified: data
+    example_okved: 23.32 Производство кирпича, черепицы и прочих строительных изделий из обожженной глины
+    companies_in_data: 392
+  industry_rule: null
+- id: real_estate
+  terms:
+  - недвижимост
+  - коммерческая недвижимость
+  - аренда офис
+  okved_prefixes:
+  - prefix: '68'
+    verified: data
+    example_okved: 68.1 Покупка и продажа собственного недвижимого имущества
+    companies_in_data: 15980
+  industry_rule: construction_real_estate
+  ambiguous_terms:
+  - аренда
+  note: «аренда» встречается и в лизинге, и в аренде оборудования
+- id: retail
+  terms:
+  - ритейл
+  - ретейл
+  - розничная торговля
+  - розничные сети
+  - продуктовый ритейл
+  okved_prefixes:
+  - prefix: '47'
+    verified: data
+    example_okved: 47.1 Торговля розничная в неспециализированных магазинах
+    companies_in_data: 2623
+  industry_rule: retail_trade
+  ambiguous_terms:
+  - магазин
+- id: wholesale
+  terms:
+  - оптовая торговля
+  - оптовик
+  - дистрибуц
+  - дистрибьютор
+  okved_prefixes:
+  - prefix: '46'
+    verified: data
+    example_okved: 46.1 Торговля оптовая за вознаграждение или на договорной основе
+    companies_in_data: 16110
+  industry_rule: wholesale_trade
+- id: food_service
+  terms:
+  - общепит
+  - ресторан
+  - кафе
+  - доставка еды
+  okved_prefixes:
+  - prefix: '56'
+    verified: data
+    example_okved: 56.1 Деятельность ресторанов и услуги по доставке продуктов питания
+    companies_in_data: 5193
+  industry_rule: hospitality_food_service
+- id: hospitality_tourism
+  terms:
+  - туризм
+  - туристическ
+  - гостиниц
+  - отел
+  - туроператор
+  - турагент
+  okved_prefixes:
+  - prefix: '55'
+    verified: data
+    example_okved: 55.1 Деятельность гостиниц и прочих мест для временного проживания
+    companies_in_data: 866
+  - prefix: '79'
+    verified: data
+    example_okved: 79.11 Деятельность туристических агентств
+    companies_in_data: 329
+  industry_rule: hospitality_food_service
+- id: auto
+  terms:
+  - автопром
+  - автомобил
+  - автодилер
+  - авторынок
+  - автозапчаст
+  okved_prefixes:
+  - prefix: '29'
+    verified: data
+    example_okved: 29.10 Производство автотранспортных средств
+    companies_in_data: 100
+  - prefix: '45'
+    verified: data
+    example_okved: 45.1 Торговля автотранспортными средствами
+    companies_in_data: 2661
+  industry_rule: auto
+- id: road_freight_logistics
+  terms:
+  - грузоперевоз
+  - автоперевоз
+  - грузовой транспорт
+  - логистик
+  okved_prefixes:
+  - prefix: '49.4'
+    verified: data
+    example_okved: 49.4 Деятельность автомобильного грузового транспорта и услуги по перевозкам
+    companies_in_data: 1380
+  - prefix: '52.1'
+    verified: data
+    example_okved: 52.10 Деятельность по складированию и хранению
+    companies_in_data: 322
+  - prefix: '52.24'
+    verified: data
+    example_okved: 52.24 Транспортная обработка грузов
+    companies_in_data: 115
+  - prefix: '52.29'
+    verified: data
+    example_okved: 52.29 Деятельность вспомогательная прочая, связанная с перевозками
+    companies_in_data: 1545
+  - prefix: '53'
+    verified: data
+    example_okved: 53.20 Деятельность почтовой связи прочая и курьерская деятельность
+    companies_in_data: 213
+  industry_rule: transport_logistics
+  ambiguous_terms:
+  - перевозк
+  note: «перевозки» без уточнения могут быть пассажирскими
+- id: rail
+  terms:
+  - железнодорож
+  - ж/д перевоз
+  - грузовые вагон
+  okved_prefixes:
+  - prefix: '49.1'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  - prefix: '49.2'
+    verified: data
+    example_okved: '49.20 Деятельность железнодорожного транспорта: грузовые перевозки'
+    companies_in_data: 54
+  industry_rule: transport_logistics
+- id: shipping
+  terms:
+  - морск
+  - судоходств
+  - порт
+  - контейнерн
+  okved_prefixes:
+  - prefix: '50'
+    verified: data
+    example_okved: 50.20 Деятельность морского грузового транспорта
+    companies_in_data: 83
+  - prefix: '52.22'
+    verified: data
+    example_okved: 52.22 Деятельность вспомогательная, связанная с водным транспортом
+    companies_in_data: 59
+  industry_rule: transport_logistics
+  ambiguous_terms:
+  - порт
+  note: '«порт» встречается в составных словах (импорт, экспорт): матчить только как отдельное слово'
+- id: aviation
+  terms:
+  - авиаперевоз
+  - авиакомпани
+  - авиаци
+  okved_prefixes:
+  - prefix: '51'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  industry_rule: transport_logistics
+- id: agro
+  terms:
+  - сельское хозяйство
+  - сельхоз
+  - агро
+  - апк
+  - урожай
+  - зерн
+  okved_prefixes:
+  - prefix: '01'
+    verified: data
+    example_okved: 01.1 Выращивание однолетних культур
+    companies_in_data: 257
+  - prefix: '03'
+    verified: data
+    example_okved: 03.11 Рыболовство морское
+    companies_in_data: 96
+  industry_rule: agro_food
+- id: food_industry
+  terms:
+  - пищев
+  - мясн
+  - молочн
+  - переработка продукт
+  okved_prefixes:
+  - prefix: '10'
+    verified: data
+    example_okved: 10.11 Переработка и консервирование мяса
+    companies_in_data: 422
+  industry_rule: agro_food
+- id: beverages
+  terms:
+  - алкогол
+  - пиво
+  - напитк
+  okved_prefixes:
+  - prefix: '11'
+    verified: data
+    example_okved: 11.05 Производство пива
+    companies_in_data: 68
+  - prefix: '46.34'
+    verified: data
+    example_okved: 46.34 Торговля оптовая напитками
+    companies_in_data: 339
+  industry_rule: agro_food
+- id: power
+  terms:
+  - электроэнерг
+  - энергетик
+  - генерац
+  - электростанц
+  - энергосбыт
+  okved_prefixes:
+  - prefix: '35.1'
+    verified: data
+    example_okved: 35.11 Производство электроэнергии
+    companies_in_data: 183
+  industry_rule: mining_energy
+- id: utilities
+  terms:
+  - жкх
+  - водоснабжен
+  - водоотведен
+  - вывоз мусора
+  - отходы
+  - теплоснабжен
+  okved_prefixes:
+  - prefix: '35.3'
+    verified: data
+    example_okved: 35.30 Производство, передача и распределение пара и горячей воды; кондиционирование воздуха
+    companies_in_data: 94
+  - prefix: '36'
+    verified: data
+    example_okved: 36.00 Забор, очистка и распределение воды
+    companies_in_data: 17
+  - prefix: '37'
+    verified: data
+    example_okved: 37.00 Сбор и обработка сточных вод
+    companies_in_data: 26
+  - prefix: '38'
+    verified: data
+    example_okved: 38.1 Сбор отходов
+    companies_in_data: 281
+  - prefix: '39'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  industry_rule: null
+- id: telecom
+  terms:
+  - телеком
+  - оператор связи
+  - мобильная связь
+  - связи
+  okved_prefixes:
+  - prefix: '61'
+    verified: data
+    example_okved: 61.10 Деятельность в области связи на базе проводных технологий
+    companies_in_data: 182
+  industry_rule: it_telecom
+  ambiguous_terms:
+  - связи
+  note: '«связи» часто в значении «в связи с»: только как часть фразы «оператор(ы) связи»'
+- id: it
+  terms:
+  - ит-
+  - it-
+  - айти
+  - программное обеспечение
+  - разработк по
+  - софт
+  - облачн
+  okved_prefixes:
+  - prefix: '62'
+    verified: data
+    example_okved: 62.0 Разработка компьютерного программного обеспечения, консультационные услуги в данной области и другие
+      сопутствующие услуги
+    companies_in_data: 3492
+  - prefix: '63'
+    verified: data
+    example_okved: 63.11 Деятельность по обработке данных, предоставление услуг по размещению информации и связанная с этим
+      деятельность
+    companies_in_data: 835
+  industry_rule: it_telecom
+- id: media
+  terms:
+  - сми
+  - медиа
+  - издательств
+  okved_prefixes:
+  - prefix: '58'
+    verified: data
+    example_okved: 58.11 Издание книг
+    companies_in_data: 111
+  - prefix: '59'
+    verified: data
+    example_okved: 59.11 Производство кинофильмов, видеофильмов и телевизионных программ
+    companies_in_data: 364
+  - prefix: '60'
+    verified: data
+    example_okved: 60.10 Деятельность в области радиовещания
+    companies_in_data: 365
+  industry_rule: null
+- id: finance
+  terms:
+  - страхов
+  - лизингов
+  - финансовые организации
+  - микрофинанс
+  okved_prefixes:
+  - prefix: '64'
+    verified: data
+    example_okved: 64.19 Денежное посредничество прочее
+    companies_in_data: 2001
+  - prefix: '65'
+    verified: classifier
+    example_okved: null
+    companies_in_data: 0
+  - prefix: '66'
+    verified: data
+    example_okved: 66.19 Деятельность вспомогательная прочая в сфере финансовых услуг, кроме страхования и пенсионного обеспечения
+    companies_in_data: 158
+  industry_rule: finance
+  ambiguous_terms:
+  - банк
+  note: '«банк» почти всегда про сам Альфа-Банк или ЦБ: не использовать как отраслевой маркер. В 64 входят и холдинговые компании
+    (64.20)'
+- id: machinery
+  terms:
+  - машиностроен
+  - станкостроен
+  - промышленное оборудован
+  okved_prefixes:
+  - prefix: '28'
+    verified: data
+    example_okved: 28.13 Производство прочих насосов и компрессоров
+    companies_in_data: 194
+  industry_rule: null
+- id: electronics
+  terms:
+  - электроник
+  - микроэлектрон
+  - полупроводник
+  okved_prefixes:
+  - prefix: '26'
+    verified: data
+    example_okved: 26.11 Производство элементов электронной аппаратуры
+    companies_in_data: 149
+  industry_rule: null
+- id: electrical
+  terms:
+  - электротехн
+  - кабельн
+  okved_prefixes:
+  - prefix: '27'
+    verified: data
+    example_okved: 27.11 Производство электродвигателей, электрогенераторов и трансформаторов
+    companies_in_data: 246
+  industry_rule: null
+- id: transport_equipment
+  terms:
+  - судостроен
+  - авиастроен
+  - вагоностроен
+  okved_prefixes:
+  - prefix: '30'
+    verified: data
+    example_okved: 30.11 Строительство кораблей, судов и плавучих конструкций
+    companies_in_data: 11
+  industry_rule: null
+- id: forestry_paper
+  terms:
+  - лесопром
+  - древесин
+  - пиломатериал
+  - целлюлоз
+  - бумаг
+  - картон
+  okved_prefixes:
+  - prefix: '02'
+    verified: data
+    example_okved: 02.10 Лесоводство и прочая лесохозяйственная деятельность
+    companies_in_data: 45
+  - prefix: '16'
+    verified: data
+    example_okved: 16.10 Распиловка и строгание древесины
+    companies_in_data: 58
+  - prefix: '17'
+    verified: data
+    example_okved: 17.21 Производство гофрированной бумаги и картона, бумажной и картонной тары
+    companies_in_data: 61
+  industry_rule: null
+- id: healthcare
+  terms:
+  - здравоохранен
+  - медицинск
+  - клиник
+  okved_prefixes:
+  - prefix: '86'
+    verified: data
+    example_okved: 86 Деятельность в области здравоохранения
+    companies_in_data: 1455
+  industry_rule: null
+- id: education
+  terms:
+  - образовани
+  okved_prefixes:
+  - prefix: '85'
+    verified: data
+    example_okved: 85.11 Образование дошкольное
+    companies_in_data: 113
+  industry_rule: null
+- id: engineering_services
+  terms:
+  - проектирован
+  - инжиниринг
+  - изыскани
+  okved_prefixes:
+  - prefix: '71'
+    verified: data
+    example_okved: 71.1 Деятельность в области архитектуры, инженерных изысканий и предоставление технических консультаций
+      в этих областях
+    companies_in_data: 4035
+  industry_rule: professional_services

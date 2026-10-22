@@ -1,0 +1,672 @@
+{
+  "stats": {
+    "companies_rows": 85525,
+    "companies_valid": 85513,
+    "companies_quarantined_ids": 1,
+    "person_links_rows": 12514,
+    "person_links_unknown_company": 7885,
+    "payments_rows": 1380585,
+    "payments_self_rows": 27406,
+    "payments_pairs": 1353162,
+    "etl_seconds": 33.0,
+    "profiles_scope": "large"
+  },
+  "counters": {
+    "id_collision": 1,
+    "fts_inconsistent": 430,
+    "workers_conflict": 23,
+    "city_region_atypical": 37,
+    "duplicate_payment_pair": 17
+  },
+  "samples": {
+    "id_collision": [
+      {
+        "code": "id_collision",
+        "message": "Один id соответствует 12 несовместимым строкам; профиль не строится",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_428697",
+        "field": null,
+        "lines": [
+          85515,
+          85516,
+          85517,
+          85518,
+          85519,
+          85520,
+          85521,
+          85522,
+          85523,
+          85524,
+          85525,
+          85526
+        ]
+      }
+    ],
+    "fts_inconsistent": [
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_2251",
+        "field": "FTS_FLAG",
+        "lines": [
+          486
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_3175",
+        "field": "FTS_FLAG",
+        "lines": [
+          694
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_6748",
+        "field": "FTS_FLAG",
+        "lines": [
+          830
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_6813",
+        "field": "FTS_FLAG",
+        "lines": [
+          894
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_7094",
+        "field": "FTS_FLAG",
+        "lines": [
+          1361
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_6397",
+        "field": "FTS_FLAG",
+        "lines": [
+          1409
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_3590",
+        "field": "FTS_FLAG",
+        "lines": [
+          1480
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_4597",
+        "field": "FTS_FLAG",
+        "lines": [
+          1499
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_4620",
+        "field": "FTS_FLAG",
+        "lines": [
+          1538
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_4682",
+        "field": "FTS_FLAG",
+        "lines": [
+          1603
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_9744",
+        "field": "FTS_FLAG",
+        "lines": [
+          1880
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_11005",
+        "field": "FTS_FLAG",
+        "lines": [
+          2186
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_8211",
+        "field": "FTS_FLAG",
+        "lines": [
+          2331
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_7520",
+        "field": "FTS_FLAG",
+        "lines": [
+          2576
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_7709",
+        "field": "FTS_FLAG",
+        "lines": [
+          2793
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_11868",
+        "field": "FTS_FLAG",
+        "lines": [
+          3071
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_12074",
+        "field": "FTS_FLAG",
+        "lines": [
+          3232
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_12181",
+        "field": "FTS_FLAG",
+        "lines": [
+          3368
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_13289",
+        "field": "FTS_FLAG",
+        "lines": [
+          3502
+        ]
+      },
+      {
+        "code": "fts_inconsistent",
+        "message": "FTS_FLAG не согласован с FTS_COUNTRY_NAME",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_12501",
+        "field": "FTS_FLAG",
+        "lines": [
+          3667
+        ]
+      }
+    ],
+    "workers_conflict": [
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_2283",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          498
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_5132",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          1091
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_4188",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          1132
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_20820",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          5211
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_32376",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          7946
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_37145",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          8754
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_36768",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          9329
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_57694",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          14169
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_65587",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          16129
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_82661",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          19979
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_85699",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          20064
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_83145",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          20415
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_92863",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          22055
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_121759",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          28306
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_133317",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          31373
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_147967",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          33618
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_188664",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          42075
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_220323",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          47238
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_305566",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          59956
+        ]
+      },
+      {
+        "code": "workers_conflict",
+        "message": "Градации численности ФНС и СПАРК расходятся",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_311907",
+        "field": "AMOUNT_WORKERS_SPARK_GRADATION",
+        "lines": [
+          61128
+        ]
+      }
+    ],
+    "city_region_atypical": [
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_27209",
+        "field": "REGION",
+        "lines": [
+          7702
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_32364",
+        "field": "REGION",
+        "lines": [
+          7940
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_32370",
+        "field": "REGION",
+        "lines": [
+          7943
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_46792",
+        "field": "REGION",
+        "lines": [
+          12275
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_62195",
+        "field": "REGION",
+        "lines": [
+          14814
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_67355",
+        "field": "REGION",
+        "lines": [
+          16846
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_74394",
+        "field": "REGION",
+        "lines": [
+          18887
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_87459",
+        "field": "REGION",
+        "lines": [
+          20781
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_115601",
+        "field": "REGION",
+        "lines": [
+          27229
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_139745",
+        "field": "REGION",
+        "lines": [
+          31805
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_146871",
+        "field": "REGION",
+        "lines": [
+          33546
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_148763",
+        "field": "REGION",
+        "lines": [
+          34280
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_154700",
+        "field": "REGION",
+        "lines": [
+          35099
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_166038",
+        "field": "REGION",
+        "lines": [
+          37062
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_173172",
+        "field": "REGION",
+        "lines": [
+          38736
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_189699",
+        "field": "REGION",
+        "lines": [
+          42089
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_204609",
+        "field": "REGION",
+        "lines": [
+          44102
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_210940",
+        "field": "REGION",
+        "lines": [
+          45764
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_212914",
+        "field": "REGION",
+        "lines": [
+          45786
+        ]
+      },
+      {
+        "code": "city_region_atypical",
+        "message": "Регион нетипичен для города (возможна ошибка данных)",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_219332",
+        "field": "REGION",
+        "lines": [
+          47273
+        ]
+      }
+    ],
+    "duplicate_payment_pair": [
+      {
+        "code": "duplicate_payment_pair",
+        "message": "Повторные строки пары PAYER-BENEFICIARY просуммированы",
+        "source_file": "df_Uid_payment_hack.csv",
+        "company_id": null,
+        "field": null,
+        "lines": [
+          53294,
+          127688,
+          177786,
+          422582,
+          501919,
+          624259,
+          632619,
+          906545,
+          1065309
+        ]
+      }
+    ]
+  }
+}

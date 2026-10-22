@@ -1,0 +1,55 @@
+# Локальный стенд модуля company_profile: PostgreSQL -> ETL (один раз) -> API.
+#   cp .env.example .env && положить 3 CSV кейса в data/raw/
+#   uv lock                      # один раз, нужна сеть; закоммитить uv.lock
+#   docker compose -f docker-compose.company_profile.yml up --build
+# Участник 6: перенести сервисы в общий docker-compose проекта.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-alfa_insight}
+      POSTGRES_USER: ${POSTGRES_USER:-alfa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  company-profile-etl:
+    build: {context: ., dockerfile: Dockerfile.company_profile}
+    command: ["python", "-m", "services.company_profile.etl", "--data-dir", "/data/raw"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-alfa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-alfa_insight}
+      COMPANY_PROFILE_PROFILES: ${COMPANY_PROFILE_PROFILES:-large}
+    volumes: ["./data/raw:/data/raw:ro"]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+  company-profile-api:
+    build: {context: ., dockerfile: Dockerfile.company_profile}
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-alfa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-alfa_insight}
+      COMPANY_PROFILE_DEMO_ENDPOINTS: ${COMPANY_PROFILE_DEMO_ENDPOINTS:-1}
+    ports: ["${COMPANY_PROFILE_PORT:-8001}:8001"]
+    depends_on:
+      company-profile-etl: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/company-profile/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  postgres-test:
+    profiles: ["test"]
+    image: postgres:16-alpine
+    environment: {POSTGRES_DB: cp_test, POSTGRES_USER: cp, POSTGRES_PASSWORD: cp}
+    ports: ["5433:5432"]
+    tmpfs: [/var/lib/postgresql/data]
+
+volumes:
+  pgdata:

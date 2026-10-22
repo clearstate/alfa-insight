@@ -1,0 +1,122 @@
+[
+  {
+    "company_id": "U_25835",
+    "slot": "credit_and_fx",
+    "reason": "Есть кредиты/лизинг и ВЭД — чувствительна к ставке и курсам",
+    "okved_code": "45.31.1",
+    "okved_name": "Торговля оптовая автомобильными деталями, узлами и принадлежностями, кроме деятельности агентов",
+    "okved_section": "G",
+    "region": "Москва",
+    "revenue": 22349855436.0,
+    "factor_levels": {
+      "rate_sensitivity": "high",
+      "deposit_income": "none",
+      "fx_and_trade_exposure": "high",
+      "payroll_exposure": "high",
+      "consumer_exposure": "none",
+      "counterparty_concentration": "low",
+      "supply_chain_industries": "info"
+    },
+    "known_top_counterparties": 14
+  },
+  {
+    "company_id": "U_99802",
+    "slot": "no_credit_no_fx",
+    "reason": "Нет кредитных продуктов и ВЭД — ставка и курс влияют слабо",
+    "okved_code": "68.20.2",
+    "okved_name": "Аренда и управление собственным или арендованным нежилым недвижимым имуществом",
+    "okved_section": "L",
+    "region": "Московская область",
+    "revenue": 16953859423.0,
+    "factor_levels": {
+      "rate_sensitivity": "none",
+      "deposit_income": "medium",
+      "fx_and_trade_exposure": "none",
+      "payroll_exposure": "low",
+      "consumer_exposure": "none",
+      "counterparty_concentration": "high",
+      "supply_chain_industries": "info"
+    },
+    "known_top_counterparties": 9
+  },
+  {
+    "company_id": "U_212593",
+    "slot": "consumer_sector",
+    "reason": "Потребительский сектор — чувствительна к спросу и инфляции",
+    "okved_code": "56.10.1",
+    "okved_name": "Деятельность ресторанов и кафе с полным ресторанным обслуживанием, кафетериев, ресторанов быстрого питания и самообслуживания",
+    "okved_section": "I",
+    "region": "Москва",
+    "revenue": 26859562976.0,
+    "factor_levels": {
+      "rate_sensitivity": "high",
+      "deposit_income": "none",
+      "fx_and_trade_exposure": "low",
+      "payroll_exposure": "medium",
+      "consumer_exposure": "high",
+      "counterparty_concentration": "medium",
+      "supply_chain_industries": "info"
+    },
+    "known_top_counterparties": 7
+  },
+  {
+    "company_id": "U_58207",
+    "slot": "deposits_treasury",
+    "reason": "Есть депозиты — интерес казначейства к ставкам размещения",
+    "okved_code": "46.90",
+    "okved_name": "Торговля оптовая неспециализированная",
+    "okved_section": "G",
+    "region": "Москва",
+    "revenue": 15304404373.0,
+    "factor_levels": {
+      "rate_sensitivity": "high",
+      "deposit_income": "medium",
+      "fx_and_trade_exposure": "high",
+      "payroll_exposure": "medium",
+      "consumer_exposure": "none",
+      "counterparty_concentration": "high",
+      "supply_chain_industries": "info"
+    },
+    "known_top_counterparties": 9
+  },
+  {
+    "company_id": "U_51606",
+    "slot": "credit_no_fx",
+    "reason": "Кредиты без ВЭД — ставка важна, курс нет",
+    "okved_code": "41.20.9",
+    "okved_name": "Прочие виды строительства жилых и нежилых зданий",
+    "okved_section": "F",
+    "region": "Республика Татарстан",
+    "revenue": 25430120937.0,
+    "factor_levels": {
+      "rate_sensitivity": "high",
+      "deposit_income": "none",
+      "fx_and_trade_exposure": "none",
+      "payroll_exposure": "low",
+      "consumer_exposure": "none",
+      "counterparty_concentration": "high",
+      "supply_chain_industries": "info"
+    },
+    "known_top_counterparties": 14
+  },
+  {
+    "company_id": "U_150736",
+    "slot": "fx_no_credit",
+    "reason": "ВЭД без кредитов — курс важен, ставка нет",
+    "okved_code": "17.21",
+    "okved_name": "Производство гофрированной бумаги и картона, бумажной и картонной тары",
+    "okved_section": "C",
+    "region": "Москва",
+    "revenue": 15848651827.0,
+    "factor_levels": {
+      "rate_sensitivity": "none",
+      "deposit_income": "none",
+      "fx_and_trade_exposure": "high",
+      "payroll_exposure": "medium",
+      "consumer_exposure": "none",
+      "counterparty_concentration": "medium",
+      "supply_chain_industries": "info"
+    },
+    "known_top_counterparties": 9
+  }
+]

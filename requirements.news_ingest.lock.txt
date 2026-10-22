@@ -1,0 +1,18 @@
+# Версии, на которых модуль news_ingest реально тестировался (Python 3.12.3). Остальное (fastapi, pydantic, psycopg, pandas,
+# numpy, uvicorn) фиксирует uv.lock участника 1/6. Для Docker: pip install --require-hashes не используется — только точные версии.
+beautifulsoup4==4.14.3
+cffi==2.0.0
+charset-normalizer==3.4.6
+cryptography==46.0.6
+lxml==6.0.2
+packaging==26.0
+pdfminer.six==20251230
+pdfplumber==0.11.9
+pillow==12.1.1
+pycparser==3.0
+pypdf==5.9.0
+pypdfium2==5.6.0
+pytesseract==0.3.13
+pyyaml==6.0.3
+soupsieve==2.8.3
+typing-extensions==4.15.0

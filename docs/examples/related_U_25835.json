@@ -1,0 +1,84 @@
+{
+  "company_id": "U_25835",
+  "schema_version": "0.3.0",
+  "total": 944,
+  "truncated": true,
+  "relations": [
+    {
+      "company_id": "U_65961",
+      "relation_types": [
+        "payment_in",
+        "payment_out"
+      ],
+      "known": true,
+      "okved_code": "45.31.1",
+      "region": "Москва",
+      "shared_persons": 0,
+      "pay_amt_in": 65000.0,
+      "pay_cnt_in": 9,
+      "pay_amt_out": 613885000.0,
+      "pay_cnt_out": 635
+    },
+    {
+      "company_id": "U_8318",
+      "relation_types": [
+        "payment_in",
+        "payment_out"
+      ],
+      "known": true,
+      "okved_code": "45.31.1",
+      "region": "Москва",
+      "shared_persons": 0,
+      "pay_amt_in": 16448000.0,
+      "pay_cnt_in": 84,
+      "pay_amt_out": 302937000.0,
+      "pay_cnt_out": 1245
+    },
+    {
+      "company_id": "U_45263",
+      "relation_types": [
+        "payment_in",
+        "payment_out"
+      ],
+      "known": true,
+      "okved_code": "45.31.1",
+      "region": "Москва",
+      "shared_persons": 0,
+      "pay_amt_in": 23000.0,
+      "pay_cnt_in": 4,
+      "pay_amt_out": 305599000.0,
+      "pay_cnt_out": 96
+    },
+    {
+      "company_id": "U_51867",
+      "relation_types": [
+        "payment_in",
+        "payment_out"
+      ],
+      "known": false,
+      "okved_code": null,
+      "region": null,
+      "shared_persons": 0,
+      "pay_amt_in": 78749000.0,
+      "pay_cnt_in": 42,
+      "pay_amt_out": 158969000.0,
+      "pay_cnt_out": 279
+    },
+    {
+      "company_id": "U_3492",
+      "relation_types": [
+        "payment_in",
+        "payment_out"
+      ],
+      "known": true,
+      "okved_code": "45.31.1",
+      "region": "Москва",
+      "shared_persons": 0,
+      "pay_amt_in": 13354000.0,
+      "pay_cnt_in": 12,
+      "pay_amt_out": 205888000.0,
+      "pay_cnt_out": 381
+    }
+  ],
+  "note": "Типы связей: same_group, shared_person, payment_in, payment_out. Не означают контроль."
+}

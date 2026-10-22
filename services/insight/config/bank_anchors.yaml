@@ -1,0 +1,154 @@
+# «Якорные» позиции Альфа-Банка для интерпретации. Каждая позиция привязана к странице документа:
+# при старте сервис находит чанк (source_file + page + match) и проверяет, что цифры из summary есть в тексте чанка.
+# Позиция, не прошедшая проверку, не используется (и попадает в /api/health -> anchors_rejected).
+# kind: forecast | assessment | recommendation | data. origin определяется claim_type чанка: bank_view -> «позиция банка»,
+# fact -> «данные из аналитики банка».
+version: 1
+anchors:
+  - id: key_rate_hold
+    file: Policy_Rate
+    page: 1
+    match: "Мы ожидаем сохранения паузы на заседании 23 октября"
+    topics: [key_rate, credit_conditions, liquidity, deposit_rates, bond_market]
+    kind: forecast
+    summary: "Банк ожидает паузы на заседании 23 октября: ставка 14,0% сохранится до конца 2026 г., прогноз на конец 2027 г. — 12,0%."
+  - id: cbr_hold_sept11
+    file: Policy_Rate
+    page: 1
+    match: "ЦБ РФ принял решение оставить ставку неизменной на уровне 14,0%"
+    topics: [key_rate, credit_conditions, deposit_rates, bond_market, liquidity]
+    kind: data
+    summary: "11 сентября ЦБ оставил ключевую ставку неизменной на уровне 14,0% — первая пауза в цикле смягчения."
+  - id: corp_credit_watch
+    file: Policy_Rate
+    page: 1
+    match: "Динамика корпоративных кредитов и бюджетный фактор"
+    topics: [credit_conditions, key_rate, financial_regulation]
+    kind: assessment
+    summary: "Для решений по ставке ЦБ следит за динамикой корпоративного кредитования и бюджетным фактором."
+  - id: cbr_dates
+    file: Бонд_Бриф
+    page: 1
+    match: "До конца года состоится два заседания ЦБ по ключевой ставке (23 октября и 18 декабря)"
+    topics: [key_rate, bond_market]
+    kind: assessment
+    summary: "До конца года пройдут два заседания ЦБ по ставке — 23 октября и 18 декабря; октябрьское банк считает крайне важным для долгового рынка."
+  - id: floating_credit
+    file: FI_Strategy
+    page: 10
+    match: "Кредиты по плавающей ставке формируют 67% рынка"
+    topics: [credit_conditions, key_rate]
+    kind: data
+    summary: "Кредиты по плавающей ставке составляют 67% рынка корпоративного кредитования."
+  - id: floating_hedge
+    file: FI_Strategy
+    page: 23
+    match: "кредитный портфель корпораций в основном сформирован из кредитов по плавающей ставке"
+    topics: [credit_conditions, key_rate, liquidity]
+    kind: data
+    summary: "Корпоративные кредиты в основном выданы по плавающей ставке с ограниченными возможностями хеджирования, поэтому процентный риск лежит на заёмщиках."
+  - id: corp_credit_growth
+    file: FI_Strategy
+    page: 10
+    match: "Годовой темп роста требований к компаниям по итогам июня составил 13,7%"
+    topics: [credit_conditions, key_rate, financial_regulation]
+    kind: data
+    summary: "Корпоративное кредитование выросло на 13,7% г/г в июне при прогнозе ЦБ на 2026 г. в 7–11%."
+  - id: bank_credit_quality
+    file: FI_Strategy
+    page: 23
+    match: "Подход банков к оценке кредитного качества"
+    topics: [credit_conditions, liquidity, counterparty_risk]
+    kind: data
+    summary: "Дефицит банковской ликвидности поднял ставки денежного рынка выше ключевой; банки ужесточают подход к оценке кредитного качества заёмщиков."
+  - id: fx_export_risk
+    file: macro_stat1H26
+    page: 3
+    match: "логистических сложностей и санкционных рисков"
+    topics: [fx_rates, foreign_trade, sanctions, logistics, export]
+    kind: assessment
+    summary: "Выгода от высоких цен на экспортные товары может не реализоваться из-за логистических сложностей и санкционных рисков; прогноз курса — 87 руб./$ на конец года."
+  - id: import_growth
+    file: macro_stat1H26
+    page: 3
+    match: "рост на 11% г/г за год нам представляется более оправданным"
+    topics: [foreign_trade, fx_rates, auto_market, wholesale_trade]
+    kind: forecast
+    summary: "Банк повысил прогноз роста товарного импорта до 11% г/г в 2026 г. (был 4%)."
+  - id: labor_market_tight
+    file: 7M26
+    page: 1
+    match: "Данные по рынку труда не подтверждают охлаждения экономики"
+    topics: [labor_market, wage_inflation, key_rate, business_activity]
+    kind: assessment
+    summary: "По данным банка (от 7 сентября) рынок труда не показывает охлаждения экономики — довод против быстрого снижения ставки."
+  - id: real_wages
+    file: consumption
+    page: 1
+    match: "рост зарплат в реальном выражении замедлился до 4,5% г/г в мае"
+    topics: [wage_inflation, labor_market, consumer_demand]
+    kind: data
+    summary: "Номинальные зарплаты выросли в мае на 10,1% г/г, в реальном выражении рост замедлился до 4,5% г/г."
+  - id: consumption_peak
+    file: consumption
+    page: 1
+    match: "динамика потребления сейчас находится на пике"
+    topics: [consumer_demand, retail, auto_market, consumer_credit, food_prices, tourism]
+    kind: forecast
+    summary: "Банк полагает, что потребление на пике; к 4К26 ожидается рост около нуля в годовом выражении."
+  - id: retail_july
+    file: 7M26
+    page: 1
+    match: "Оборот розничной торговли в июле вырос на 5,3% г/г"
+    topics: [retail, consumer_demand, auto_market]
+    kind: data
+    summary: "Оборот розничной торговли в июле вырос на 5,3% г/г после 7,2% г/г во 2К26."
+  - id: inflation_75
+    file: macro_stat1H26
+    page: 1
+    match: "инфляция составит 7,5% г/г по итогам текущего года, что будет сдерживать снижение ключевой ставки"
+    topics: [inflation, key_rate, food_prices, fuel_prices]
+    kind: forecast
+    summary: "Банк ожидает инфляцию 7,5% г/г по итогам 2026 г., что сдерживает снижение ключевой ставки."
+  - id: fuel_pass_through
+    file: consumption
+    page: 2
+    match: "перенос повышенных цен на топливо в цены по широкому спектру товаров"
+    topics: [fuel_prices, inflation, food_prices, logistics]
+    kind: assessment
+    summary: "Банк видит перенос повышенных цен на топливо в цены широкого круга товаров."
+  - id: gdp_cut
+    file: macro_stat1H26
+    page: 3
+    match: "Понижаем прогноз роста ВВП до 0,1% на 2026 год"
+    topics: [gdp, business_activity, construction, commodities, metals]
+    kind: forecast
+    summary: "Банк понизил прогноз роста ВВП до 0,1% на 2026 г.; промпроизводство и инвестиции слабые."
+  - id: corp_profit_weak
+    file: 7M26
+    page: 1
+    match: "сальдированный финансовый результат компаний составил только 400 млрд руб."
+    topics: [business_activity, credit_conditions, counterparty_risk, oil_gas]
+    kind: data
+    summary: "Сальдированный финрезультат компаний в июне — лишь 400 млрд руб. при среднемесячных 2,3 трлн руб."
+  - id: bonds_defensive
+    file: FI_Strategy
+    page: 3
+    match: "Защитный портфель облигаций остается актуальной идеей"
+    topics: [bond_market, deposit_rates, liquidity]
+    kind: recommendation
+    summary: "Банк сохраняет рекомендацию защитного портфеля облигаций и избегает спекулятивных длинных позиций в ОФЗ."
+  - id: budget_borrowing
+    file: FI_Strategy
+    page: 15
+    match: "План Минфина предполагает размещение ОФЗ на сумму 6,5 трлн руб."
+    topics: [bond_market, key_rate, credit_conditions]
+    kind: assessment
+    summary: "План Минфина — размещение ОФЗ на 6,5 трлн руб. в 2026 г.; банк ожидает, что заимствования окажутся выше."
+  - id: gold_fed
+    file: Gold_digest
+    page: 3
+    match: "Возврат риска ужесточения ФРС"
+    topics: [gold, fx_rates]
+    kind: assessment
+    summary: "К концу августа золото стоило около $4 400 за унцию; жёсткая риторика ФРС вернула риск ужесточения."

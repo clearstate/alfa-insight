@@ -1,0 +1,208 @@
+[
+ {
+  "indicator": "key_rate_avg",
+  "period": "2026",
+  "values": [
+   {
+    "value": 14.5,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 14.5,
+    "published_at": "2026-09-07T00:00:00+00:00",
+    "item_id": "news_2ea2421b4071ec0c4fc0"
+   },
+   {
+    "value": 14.6,
+    "published_at": "2026-09-11T00:00:00+00:00",
+    "item_id": "news_3673aa0aae532478e4b6"
+   }
+  ],
+  "latest": {
+   "value": 14.6,
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6"
+  },
+  "spread": 0.1
+ },
+ {
+  "indicator": "key_rate_avg",
+  "period": "2027",
+  "values": [
+   {
+    "value": 12.6,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 12.5,
+    "published_at": "2026-09-07T00:00:00+00:00",
+    "item_id": "news_2ea2421b4071ec0c4fc0"
+   },
+   {
+    "value": 13.0,
+    "published_at": "2026-09-11T00:00:00+00:00",
+    "item_id": "news_3673aa0aae532478e4b6"
+   }
+  ],
+  "latest": {
+   "value": 13.0,
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6"
+  },
+  "spread": 0.5
+ },
+ {
+  "indicator": "key_rate_eoy",
+  "period": "2026",
+  "values": [
+   {
+    "value": 13.5,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 13.5,
+    "published_at": "2026-09-07T00:00:00+00:00",
+    "item_id": "news_2ea2421b4071ec0c4fc0"
+   },
+   {
+    "value": 14.0,
+    "published_at": "2026-09-11T00:00:00+00:00",
+    "item_id": "news_3673aa0aae532478e4b6"
+   }
+  ],
+  "latest": {
+   "value": 14.0,
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6"
+  },
+  "spread": 0.5
+ },
+ {
+  "indicator": "key_rate_path",
+  "period": "2026-10",
+  "values": [
+   {
+    "value": 13.75,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 13.75,
+    "published_at": "2026-08-05T00:00:00+00:00",
+    "item_id": "news_22749d7d6e08195eac6c"
+   },
+   {
+    "value": 14.0,
+    "published_at": "2026-09-11T00:00:00+00:00",
+    "item_id": "news_3673aa0aae532478e4b6"
+   }
+  ],
+  "latest": {
+   "value": 14.0,
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6"
+  },
+  "spread": 0.25
+ },
+ {
+  "indicator": "key_rate_path",
+  "period": "2026-12",
+  "values": [
+   {
+    "value": 13.5,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 13.5,
+    "published_at": "2026-08-05T00:00:00+00:00",
+    "item_id": "news_22749d7d6e08195eac6c"
+   },
+   {
+    "value": 14.0,
+    "published_at": "2026-09-11T00:00:00+00:00",
+    "item_id": "news_3673aa0aae532478e4b6"
+   }
+  ],
+  "latest": {
+   "value": 14.0,
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6"
+  },
+  "spread": 0.5
+ },
+ {
+  "indicator": "usd_rub_eoy",
+  "period": "2027",
+  "values": [
+   {
+    "value": 95.0,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 95.0,
+    "published_at": "2026-09-07T00:00:00+00:00",
+    "item_id": "news_2ea2421b4071ec0c4fc0"
+   },
+   {
+    "value": 93.0,
+    "published_at": "2026-09-11T00:00:00+00:00",
+    "item_id": "news_3673aa0aae532478e4b6"
+   }
+  ],
+  "latest": {
+   "value": 93.0,
+   "published_at": "2026-09-11T00:00:00+00:00",
+   "item_id": "news_3673aa0aae532478e4b6"
+  },
+  "spread": 2.0
+ },
+ {
+  "indicator": "wages_nominal",
+  "period": "2026-07",
+  "values": [
+   {
+    "value": 8.2,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 9.0,
+    "published_at": "2026-09-07T00:00:00+00:00",
+    "item_id": "news_2ea2421b4071ec0c4fc0"
+   }
+  ],
+  "latest": {
+   "value": 9.0,
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0"
+  },
+  "spread": 0.8
+ },
+ {
+  "indicator": "wages_real",
+  "period": "2026-07",
+  "values": [
+   {
+    "value": 1.7,
+    "published_at": "2026-07-31T00:00:00+00:00",
+    "item_id": "news_12ae83f92b0e2797d81b"
+   },
+   {
+    "value": 2.8,
+    "published_at": "2026-09-07T00:00:00+00:00",
+    "item_id": "news_2ea2421b4071ec0c4fc0"
+   }
+  ],
+  "latest": {
+   "value": 2.8,
+   "published_at": "2026-09-07T00:00:00+00:00",
+   "item_id": "news_2ea2421b4071ec0c4fc0"
+  },
+  "spread": 1.1
+ }
+]

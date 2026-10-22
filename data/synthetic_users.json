@@ -1,0 +1,91 @@
+{
+ "synthetic": true,
+ "note": "Синтетические учётные записи для демо и e2e; company_ids из обезличенных данных кейса Пользователь demo (Алексей Крылов) имеет доступ ко всем 6 демо-компаниям и может переключать роль в интерфейсе; пароль всех демо-учёток — demo. Имена пользователей вымышлены.",
+ "demo_slots": {
+  "credit_and_fx": "U_25835",
+  "no_credit_no_fx": "U_99802",
+  "consumer_sector": "U_212593",
+  "deposits_treasury": "U_58207",
+  "credit_no_fx": "U_51606",
+  "fx_no_credit": "U_150736"
+ },
+ "users": [
+  {
+   "user_id": "demo",
+   "role": "ceo",
+   "display_name": "Алексей Крылов",
+   "company_ids": [
+    "U_25835",
+    "U_212593",
+    "U_58207",
+    "U_51606",
+    "U_150736",
+    "U_99802"
+   ],
+   "priority_topics": null,
+   "synthetic": true
+  },
+  {
+   "user_id": "u_cfo_demo",
+   "role": "cfo",
+   "display_name": "Ирина Волкова",
+   "company_ids": [
+    "U_25835",
+    "U_51606"
+   ],
+   "priority_topics": null,
+   "synthetic": true
+  },
+  {
+   "user_id": "u_treasury_demo",
+   "role": "treasury",
+   "display_name": "Дмитрий Орлов",
+   "company_ids": [
+    "U_58207",
+    "U_25835"
+   ],
+   "priority_topics": null,
+   "synthetic": true
+  },
+  {
+   "user_id": "u_accountant_demo",
+   "role": "chief_accountant",
+   "display_name": "Елена Смирнова",
+   "company_ids": [
+    "U_212593"
+   ],
+   "priority_topics": null,
+   "synthetic": true
+  },
+  {
+   "user_id": "u_owner_demo",
+   "role": "owner",
+   "display_name": "Сергей Морозов",
+   "company_ids": [
+    "U_99802",
+    "U_212593"
+   ],
+   "priority_topics": null,
+   "synthetic": true
+  },
+  {
+   "user_id": "u_ceo_demo",
+   "role": "ceo",
+   "display_name": "Андрей Лебедев",
+   "company_ids": [
+    "U_51606",
+    "U_99802"
+   ],
+   "priority_topics": null,
+   "synthetic": true
+  },
+  {
+   "user_id": "u_other_demo",
+   "role": "other",
+   "display_name": "Ольга Кузнецова",
+   "company_ids": [],
+   "priority_topics": null,
+   "synthetic": true
+  }
+ ]
+}

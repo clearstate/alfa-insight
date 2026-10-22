@@ -1,0 +1,81 @@
+# Словарь именованных сущностей (органы, рынки, лица, геотеги вне РФ). Страны и регионы — geo_countries.yaml / geo_regions.yaml
+# (сгенерированы из данных кейса, чтобы совпадать с профилем компании). Прочее — эвристика: ПАО/АО/ООО + Название.
+version: 1
+entities:
+- name: Банк России
+  type: org
+  patterns:
+  - банк\w*\s+росси
+  - \bцб\s*рф\b
+  - \bцб\b
+- name: Минфин России
+  type: org
+  patterns:
+  - минфин(?!\s+сша)
+  - министерств\w*\s+финансов
+- name: Минэкономразвития
+  type: org
+  patterns:
+  - минэко
+  - минэкономразвития
+- name: Росстат
+  type: org
+  patterns:
+  - росстат
+- name: ФНС
+  type: org
+  patterns:
+  - \bфнс\b
+- name: ФРС США
+  type: org
+  patterns:
+  - \bфрс\b
+  - федеральн\w*\s+резервн
+- name: Минфин США
+  type: org
+  patterns:
+  - минфин\s+сша
+  - казначейств\w*\s+сша
+- name: ОПЕК+
+  type: org
+  patterns:
+  - \bopec\b
+  - \bопек
+- name: Московская биржа
+  type: org
+  patterns:
+  - мосбирж
+  - московск\w*\s+бирж
+- name: Всемирный совет по золоту
+  type: org
+  patterns:
+  - \bwgc\b
+- name: АКРА
+  type: org
+  patterns:
+  - \bакра\b
+- name: Эксперт РА
+  type: org
+  patterns:
+  - эксперт\s+ра
+- name: HeadHunter
+  type: org
+  patterns:
+  - headhunter
+- name: Э. Набиуллина
+  type: person
+  patterns:
+  - набиуллин
+- name: К. Уорш
+  type: person
+  patterns:
+  - уорш
+- name: Персидский залив
+  type: geo
+  patterns:
+  - персидск\w*\s+залив
+  - ормузск
+- name: Ближний Восток
+  type: geo
+  patterns:
+  - ближн\w*\s+восток

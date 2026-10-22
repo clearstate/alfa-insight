@@ -1,0 +1,171 @@
+# Правила построения производных признаков company_profile.
+# Все пороги — эвристики прототипа, не банковская методология. Менять здесь, не в коде.
+version: 1
+
+thresholds:
+  # Допущение: REVENUE_COMPANY в рублях. Единицы и период НЕ подтверждены организаторами.
+  large_business_revenue: 15000000000
+  # Группа больше этого размера считается «мега-группой» (см. docs/data_audit.md §3).
+  mega_group_size: 50
+  group_members_limit: 50
+  counterparties_top_n: 10
+  related_limit: 100
+  concentration:
+    top1_share_high: 0.5
+    top1_share_medium: 0.3
+    # При меньшем числе видимых контрагентов концентрацию не оцениваем (level = unknown).
+    min_counterparties: 5
+  supply_chain:
+    # Если доля оборота с известными контрагентами ниже — confidence = low.
+    min_known_coverage: 0.3
+    top_industries: 5
+    # Отраслевое правило даёт темы профилю, только если доля известного оборота с контрагентами,
+    # чей ОКВЭД совпал с префиксами правила (по уровням кода), не ниже порога.
+    min_share_for_topics: 0.2
+    # Детализация по полным кодам ОКВЭД контрагентов: сколько кодов на направление (p90 на данных — 43).
+    top_codes: 50
+
+# Веса тем профиля (для объяснимого ранжирования у участника 4). Итоговый вес = сумма по источникам, max 1.0.
+topic_weights:
+  industry: 1.0
+  factor_high: 0.8
+  factor_medium: 0.5
+  supply_chain: 0.5   # умножается на долю отрасли в известном обороте
+
+# Разделы ОКВЭД2 (ОК 029-2014, КДЕС Ред. 2): буква -> диапазон классов (первые 2 цифры кода).
+okved_sections:
+  A: {name: "Сельское, лесное хозяйство, охота, рыболовство и рыбоводство", from: 1, to: 3}
+  B: {name: "Добыча полезных ископаемых", from: 5, to: 9}
+  C: {name: "Обрабатывающие производства", from: 10, to: 33}
+  D: {name: "Обеспечение электрической энергией, газом и паром; кондиционирование воздуха", from: 35, to: 35}
+  E: {name: "Водоснабжение; водоотведение, сбор и утилизация отходов", from: 36, to: 39}
+  F: {name: "Строительство", from: 41, to: 43}
+  G: {name: "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов", from: 45, to: 47}
+  H: {name: "Транспортировка и хранение", from: 49, to: 53}
+  I: {name: "Деятельность гостиниц и предприятий общественного питания", from: 55, to: 56}
+  J: {name: "Деятельность в области информации и связи", from: 58, to: 63}
+  K: {name: "Деятельность финансовая и страховая", from: 64, to: 66}
+  L: {name: "Деятельность по операциям с недвижимым имуществом", from: 68, to: 68}
+  M: {name: "Деятельность профессиональная, научная и техническая", from: 69, to: 75}
+  N: {name: "Деятельность административная и сопутствующие дополнительные услуги", from: 77, to: 82}
+  O: {name: "Государственное управление и обеспечение военной безопасности; социальное обеспечение", from: 84, to: 84}
+  P: {name: "Образование", from: 85, to: 85}
+  Q: {name: "Деятельность в области здравоохранения и социальных услуг", from: 86, to: 88}
+  R: {name: "Деятельность в области культуры, спорта, организации досуга и развлечений", from: 90, to: 93}
+  S: {name: "Предоставление прочих видов услуг", from: 94, to: 96}
+  T: {name: "Деятельность домашних хозяйств как работодателей", from: 97, to: 98}
+  U: {name: "Деятельность экстерриториальных организаций и органов", from: 99, to: 99}
+
+# Значения OKFS_NAME -> тип собственности (inference).
+ownership:
+  foreign:
+    - "СОБСТВЕННОСТЬ ИНОСТРАННЫХ ЮРИДИЧЕСКИХ ЛИЦ"
+    - "СОБСТВЕННОСТЬ ИНОСТРАННЫХ ГРАЖДАН И ЛИЦ БЕЗ ГРАЖДАНСТВА"
+    - "СМЕШАННАЯ ИНОСТРАННАЯ СОБСТВЕННОСТЬ"
+    - "СОВМЕСТНАЯ ЧАСТНАЯ И ИНОСТРАННАЯ СОБСТВЕННОСТЬ"
+  state:
+    - "ФЕДЕРАЛЬНАЯ СОБСТВЕННОСТЬ"
+    - "СОБСТВЕННОСТЬ СУБЪЕКТОВ РОССИЙСКОЙ ФЕДЕРАЦИИ"
+    - "МУНИЦИПАЛЬНАЯ СОБСТВЕННОСТЬ"
+  mixed_state:
+    - "СМЕШАННАЯ РОССИЙСКАЯ СОБСТВЕННОСТЬ С ДОЛЕЙ ФЕДЕРАЛЬНОЙ СОБСТВЕННОСТИ"
+    - "СМЕШАННАЯ РОССИЙСКАЯ СОБСТВЕННОСТЬ С ДОЛЕЙ СОБСТВЕННОСТИ СУБЪЕКТОВ РОССИЙСКОЙ ФЕДЕРАЦИИ"
+  private:
+    - "ЧАСТНАЯ СОБСТВЕННОСТЬ"
+    - "ИНАЯ СМЕШАННАЯ РОССИЙСКАЯ СОБСТВЕННОСТЬ"
+    - "СОБСТВЕННОСТЬ ОБЩЕСТВЕННЫХ ОБЪЕДИНЕНИЙ"
+
+# Поле CSV -> код продукта в профиле.
+products:
+  CL_PRODUCT_RKO_MARK: rko
+  CL_PRODUCT_GAR_MARK: guarantees
+  CL_PRODUCT_LOA_MARK: loans
+  CL_PRODUCT_LEA_MARK: leasing
+  CL_PRODUCT_DEP_MARK: deposits
+  CL_PRODUCT_ZPP_MARK: payroll_project
+  FACTORING_MARK: factoring
+
+# Отраслевые темы: префикс ОКВЭД -> темы. Новая отрасль = новая запись, без изменения кода.
+# Префикс сравнивается с уровнями кода (46, 46.3, 46.34, ...).
+industry_topics:
+  - id: construction_real_estate
+    okved_prefixes: ["41", "42", "43", "68"]
+    topics: [key_rate, mortgage, construction, real_estate]
+  - id: wholesale_trade
+    okved_prefixes: ["46"]
+    topics: [wholesale_trade, consumer_demand, fx_rates, logistics]
+  - id: retail_trade
+    okved_prefixes: ["47"]
+    topics: [consumer_demand, inflation, retail]
+  - id: auto
+    okved_prefixes: ["45", "29"]
+    topics: [auto_market, fx_rates, consumer_credit]
+  - id: transport_logistics
+    okved_prefixes: ["49", "50", "51", "52", "53"]
+    topics: [logistics, fuel_prices, foreign_trade]
+  - id: mining_energy
+    okved_prefixes: ["05", "06", "07", "08", "09", "19", "35"]
+    topics: [commodities, oil_gas, export, fx_rates]
+  - id: metals
+    okved_prefixes: ["24", "25"]
+    topics: [commodities, metals, export]
+  - id: precious_metals
+    # 46.72.2 убран: в данных это «металлы в первичных формах», не драгметаллы.
+    okved_prefixes: ["07.29.4", "24.41", "32.12"]
+    topics: [gold, commodities]
+  - id: agro_food
+    # 02 (лесоводство) не агро: см. contracts/industry_terms.yaml, forestry_paper.
+    okved_prefixes: ["01", "03", "10", "11"]
+    topics: [agro, food_prices, inflation, export]
+  - id: chemicals_pharma
+    okved_prefixes: ["20", "21", "46.46"]
+    topics: [chemicals, import_substitution, fx_rates]
+  - id: it_telecom
+    # 58 в данных — издание книг и газет (медиа), не ИТ.
+    okved_prefixes: ["61", "62", "63"]
+    topics: [it, import_substitution, labor_market]
+  - id: finance
+    okved_prefixes: ["64", "65", "66"]
+    topics: [key_rate, bond_market, financial_regulation]
+  - id: hospitality_food_service
+    okved_prefixes: ["55", "56"]
+    topics: [consumer_demand, tourism, inflation]
+  - id: professional_services
+    okved_prefixes: ["69", "70", "71", "72", "73", "74"]
+    topics: [business_activity, gdp]
+
+factors:
+  rate_sensitivity:
+    rule_id: rate_sensitivity_v1
+    high_if_any: [loans, leasing]
+    medium_if_any: [guarantees, factoring]
+    topics: [key_rate, credit_conditions, bond_market]
+  deposit_income:
+    rule_id: deposit_income_v1
+    products: [deposits]
+    topics: [deposit_rates, key_rate, liquidity]
+  fx_and_trade_exposure:
+    rule_id: fx_trade_v1
+    topics: [fx_rates, sanctions, logistics, foreign_trade]
+    # Иностранная собственность — дополнительный, более слабый сигнал.
+    foreign_ownership_level: low
+  payroll_exposure:
+    rule_id: payroll_v1
+    topics: [labor_market, wage_inflation]
+    # Градация ФНС -> уровень, если есть ЗП-проект или нет (без ЗП-проекта уровень на ступень ниже).
+    workers_levels:
+      "Менее 15": low
+      "16-100": medium
+      "101-250": high
+      "Более 251": high
+  consumer_exposure:
+    rule_id: consumer_v1
+    # Только розница и потребительские услуги. 45.3 не берём целиком: там и опт автозапчастей.
+    okved_prefixes: ["47", "55", "56", "45.11.2", "45.32", "79", "93", "96"]
+    topics: [consumer_demand, inflation, retail]
+  counterparty_concentration:
+    rule_id: concentration_v1
+    topics: [counterparty_risk]
+  supply_chain_industries:
+    rule_id: supply_chain_v1
+    topics: []

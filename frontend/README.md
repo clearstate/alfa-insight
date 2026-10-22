@@ -1,25 +1,24 @@
-# frontend
+# А-Бизнес — корпоративный интернет-банк
 
-**Владелец:** участник 5
+Демонстрационный интерфейс корпоративного интернет-банка на React, TypeScript и Vite.
 
-## Запуск
+## Запуск в VS Code
+
+1. Установите Node.js 20+ и pnpm.
+2. Откройте эту папку в VS Code.
+3. Откройте встроенный терминал и выполните:
 
 ```bash
-npm ci
-npm run gen:api   # типы из contracts/openapi.yaml
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-Переменные: `VITE_API_BASE_URL`, `VITE_USE_MOCKS` (см. корневой `.env.example`).
+Vite покажет локальный адрес сайта в терминале.
 
-## Структура
+## Production-сборка
 
-| Каталог | Содержимое |
-|---|---|
-| `src/api/` | клиент, сгенерированный из OpenAPI, и адаптеры |
-| `src/mocks/` | MSW-моки (TEMP) |
-| `src/pages/` | вход, главный экран, лента, инсайт, сравнение |
-| `src/components/` | карточки, метки claim_type, трасса, чипы вопросов |
-| `src/styles/` | дизайн-токены |
+```bash
+pnpm build
+```
 
-E2E-сценарии: [tests/e2e](../tests/e2e/).
+Готовые файлы появятся в папке `dist`.

@@ -1,0 +1,2414 @@
+{
+  "company_id": "U_25835",
+  "schema_version": "0.3.0",
+  "built_at": "2026-10-20T12:22:57.048465+00:00",
+  "data_run_id": "run_20261020T122044Z_43be2284",
+  "industry": {
+    "okved_code": {
+      "value": "45.31.1",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "MAINOKVED_CODE",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "okved_name": {
+      "value": "Торговля оптовая автомобильными деталями, узлами и принадлежностями, кроме деятельности агентов",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "MAINOKVED_NAME",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "okved_levels": {
+      "value": [
+        "45",
+        "45.3",
+        "45.31",
+        "45.31.1"
+      ],
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "MAINOKVED_CODE",
+      "as_of": null,
+      "method": "okved_hierarchy_v1: разбор кода ОКВЭД2 по уровням и раздел по feature_rules.yaml",
+      "confidence": "high"
+    },
+    "okved_division": {
+      "value": "45",
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "MAINOKVED_CODE",
+      "as_of": null,
+      "method": "okved_hierarchy_v1: разбор кода ОКВЭД2 по уровням и раздел по feature_rules.yaml",
+      "confidence": "high"
+    },
+    "okved_section": {
+      "value": "G",
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "MAINOKVED_CODE",
+      "as_of": null,
+      "method": "okved_hierarchy_v1: разбор кода ОКВЭД2 по уровням и раздел по feature_rules.yaml",
+      "confidence": "high"
+    },
+    "okved_section_name": {
+      "value": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "MAINOKVED_CODE",
+      "as_of": null,
+      "method": "okved_hierarchy_v1: разбор кода ОКВЭД2 по уровням и раздел по feature_rules.yaml",
+      "confidence": "high"
+    },
+    "industry_rules": [
+      {
+        "rule_id": "auto",
+        "matched_prefixes": [
+          "45"
+        ],
+        "topics": [
+          "auto_market",
+          "fx_rates",
+          "consumer_credit"
+        ]
+      }
+    ]
+  },
+  "geography": {
+    "city": {
+      "value": "г. Москва",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "CITY",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "region": {
+      "value": "Москва",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "REGION",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "city_region_atypical": false
+  },
+  "size": {
+    "revenue": {
+      "value": 22349855436.0,
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "REVENUE_COMPANY",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "revenue_unit": {
+      "value": null,
+      "claim_type": "unknown",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": null,
+      "source_field": "REVENUE_COMPANY",
+      "as_of": null,
+      "method": "Единицы не подтверждены организаторами; рабочее допущение — RUB",
+      "confidence": null
+    },
+    "revenue_period": {
+      "value": null,
+      "claim_type": "unknown",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": null,
+      "source_field": "REVENUE_COMPANY",
+      "as_of": null,
+      "method": "Период выручки в данных не указан",
+      "confidence": null
+    },
+    "is_large_business": {
+      "value": true,
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "REVENUE_COMPANY",
+      "as_of": null,
+      "method": "REVENUE_COMPANY >= 15000000000 при допущении, что выручка в RUB",
+      "confidence": "low"
+    },
+    "workers_fns": {
+      "value": "Более 251",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "AMOUNT_WORKERS_FNS_GRADATION",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "workers_spark": {
+      "value": null,
+      "claim_type": "unknown",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "AMOUNT_WORKERS_SPARK_GRADATION",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "workers_conflict": {
+      "value": null,
+      "claim_type": "unknown",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "AMOUNT_WORKERS_SPARK_GRADATION",
+      "as_of": null,
+      "method": "Сравнение градаций ФНС и СПАРК",
+      "confidence": null
+    },
+    "company_age": {
+      "value": "16-25",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "COMPANY_AGE_YEARS_GRADATION",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "eco_stage": {
+      "value": "Оптимизация",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "ECO_MARK_LABEL",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    }
+  },
+  "legal": {
+    "org_type": {
+      "value": "КОММ_ОРГ",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "ORG_TYPE",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "okfs_name": {
+      "value": "ЧАСТНАЯ СОБСТВЕННОСТЬ",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "OKFS_NAME",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "ownership_type": {
+      "value": "private",
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "OKFS_NAME",
+      "as_of": null,
+      "method": "Маппинг OKFS_NAME -> тип собственности (feature_rules.yaml)",
+      "confidence": "high"
+    }
+  },
+  "bank_relationship": {
+    "client_type": {
+      "value": "CLIENT",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "CL_TYPE",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "products": {
+      "rko": {
+        "value": true,
+        "claim_type": "fact",
+        "source_file": "df_Uid_data_hack.csv",
+        "source_row_id": "line:6325",
+        "source_field": "CL_PRODUCT_RKO_MARK",
+        "as_of": null,
+        "method": null,
+        "confidence": null
+      },
+      "guarantees": {
+        "value": false,
+        "claim_type": "fact",
+        "source_file": "df_Uid_data_hack.csv",
+        "source_row_id": "line:6325",
+        "source_field": "CL_PRODUCT_GAR_MARK",
+        "as_of": null,
+        "method": null,
+        "confidence": null
+      },
+      "loans": {
+        "value": true,
+        "claim_type": "fact",
+        "source_file": "df_Uid_data_hack.csv",
+        "source_row_id": "line:6325",
+        "source_field": "CL_PRODUCT_LOA_MARK",
+        "as_of": null,
+        "method": null,
+        "confidence": null
+      },
+      "leasing": {
+        "value": true,
+        "claim_type": "fact",
+        "source_file": "df_Uid_data_hack.csv",
+        "source_row_id": "line:6325",
+        "source_field": "CL_PRODUCT_LEA_MARK",
+        "as_of": null,
+        "method": null,
+        "confidence": null
+      },
+      "deposits": {
+        "value": false,
+        "claim_type": "fact",
+        "source_file": "df_Uid_data_hack.csv",
+        "source_row_id": "line:6325",
+        "source_field": "CL_PRODUCT_DEP_MARK",
+        "as_of": null,
+        "method": null,
+        "confidence": null
+      },
+      "payroll_project": {
+        "value": true,
+        "claim_type": "fact",
+        "source_file": "df_Uid_data_hack.csv",
+        "source_row_id": "line:6325",
+        "source_field": "CL_PRODUCT_ZPP_MARK",
+        "as_of": null,
+        "method": null,
+        "confidence": null
+      },
+      "factoring": {
+        "value": false,
+        "claim_type": "fact",
+        "source_file": "df_Uid_data_hack.csv",
+        "source_row_id": "line:6325",
+        "source_field": "FACTORING_MARK",
+        "as_of": null,
+        "method": null,
+        "confidence": null
+      }
+    },
+    "products_meaning_confirmed": false
+  },
+  "foreign_trade": {
+    "fts_flag": {
+      "value": true,
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "FTS_FLAG",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "countries": {
+      "value": [
+        "ОАЭ",
+        "КИТАЙ",
+        "ИТАЛИЯ"
+      ],
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "FTS_COUNTRY_NAME",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "has_foreign_trade": {
+      "value": true,
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "FTS_FLAG",
+      "as_of": null,
+      "method": "FTS_FLAG = 1 ИЛИ заполнен FTS_COUNTRY_NAME",
+      "confidence": "high"
+    },
+    "direction": {
+      "value": null,
+      "claim_type": "unknown",
+      "source_file": null,
+      "source_row_id": null,
+      "source_field": null,
+      "as_of": null,
+      "method": "Направление ВЭД (импорт/экспорт) в данных отсутствует",
+      "confidence": null
+    },
+    "consistent": true
+  },
+  "group": {
+    "group_id": {
+      "value": "group_133440_sb",
+      "claim_type": "fact",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": "line:6325",
+      "source_field": "GROUP_ID",
+      "as_of": null,
+      "method": null,
+      "confidence": null
+    },
+    "size": 1,
+    "members": [],
+    "members_truncated": false,
+    "is_mega_group": false,
+    "group_revenue_sum": {
+      "value": 22349855436.0,
+      "claim_type": "inference",
+      "source_file": "df_Uid_data_hack.csv",
+      "source_row_id": null,
+      "source_field": "REVENUE_COMPANY",
+      "as_of": null,
+      "method": "Сумма REVENUE_COMPANY участников группы с известной выручкой (1 из 1); внутригрупповые обороты не исключены",
+      "confidence": "low"
+    }
+  },
+  "related_by_people": [],
+  "counterparties": {
+    "incoming": {
+      "total_amt": 3410576000.0,
+      "total_cnt": 65629,
+      "n_counterparties": 744,
+      "known_coverage": 0.507,
+      "top": [
+        {
+          "company_id": "U_16260",
+          "pay_amt": 217794000.0,
+          "pay_cnt": 170,
+          "share": 0.0639,
+          "known": false,
+          "okved_code": null,
+          "okved_section": null,
+          "region": null,
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:353196"
+        },
+        {
+          "company_id": "U_122970",
+          "pay_amt": 133659000.0,
+          "pay_cnt": 400,
+          "share": 0.0392,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Воронежская область",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:500436"
+        },
+        {
+          "company_id": "U_34993",
+          "pay_amt": 133305000.0,
+          "pay_cnt": 4924,
+          "share": 0.0391,
+          "known": false,
+          "okved_code": null,
+          "okved_section": null,
+          "region": null,
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:1099888"
+        },
+        {
+          "company_id": "U_189456",
+          "pay_amt": 114760000.0,
+          "pay_cnt": 252,
+          "share": 0.0336,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Новосибирская область",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:332270"
+        },
+        {
+          "company_id": "U_128194",
+          "pay_amt": 98067000.0,
+          "pay_cnt": 345,
+          "share": 0.0288,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Воронежская область",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:669260"
+        },
+        {
+          "company_id": "U_95190",
+          "pay_amt": 83554000.0,
+          "pay_cnt": 739,
+          "share": 0.0245,
+          "known": false,
+          "okved_code": null,
+          "okved_section": null,
+          "region": null,
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:484938"
+        },
+        {
+          "company_id": "U_68831",
+          "pay_amt": 79312000.0,
+          "pay_cnt": 260,
+          "share": 0.0233,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:182774"
+        },
+        {
+          "company_id": "U_51867",
+          "pay_amt": 78749000.0,
+          "pay_cnt": 42,
+          "share": 0.0231,
+          "known": false,
+          "okved_code": null,
+          "okved_section": null,
+          "region": null,
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:12046"
+        },
+        {
+          "company_id": "U_199606",
+          "pay_amt": 63064000.0,
+          "pay_cnt": 263,
+          "share": 0.0185,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Воронежская область",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:207297"
+        },
+        {
+          "company_id": "U_39483",
+          "pay_amt": 62230000.0,
+          "pay_cnt": 438,
+          "share": 0.0182,
+          "known": false,
+          "okved_code": null,
+          "okved_section": null,
+          "region": null,
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:588423"
+        }
+      ],
+      "truncated": true
+    },
+    "outgoing": {
+      "total_amt": 11282862000.0,
+      "total_cnt": 18703,
+      "n_counterparties": 268,
+      "known_coverage": 0.777,
+      "top": [
+        {
+          "company_id": "U_191409",
+          "pay_amt": 3091293000.0,
+          "pay_cnt": 483,
+          "share": 0.274,
+          "known": true,
+          "okved_code": "46.90",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:1029979"
+        },
+        {
+          "company_id": "U_65961",
+          "pay_amt": 613885000.0,
+          "pay_cnt": 635,
+          "share": 0.0544,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:78151"
+        },
+        {
+          "company_id": "U_64507",
+          "pay_amt": 525130000.0,
+          "pay_cnt": 77,
+          "share": 0.0465,
+          "known": true,
+          "okved_code": "45.3",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:807150"
+        },
+        {
+          "company_id": "U_17673",
+          "pay_amt": 436060000.0,
+          "pay_cnt": 226,
+          "share": 0.0386,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:1295299"
+        },
+        {
+          "company_id": "U_116696",
+          "pay_amt": 322956000.0,
+          "pay_cnt": 50,
+          "share": 0.0286,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:393151"
+        },
+        {
+          "company_id": "U_40163",
+          "pay_amt": 322016000.0,
+          "pay_cnt": 70,
+          "share": 0.0285,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:1036275"
+        },
+        {
+          "company_id": "U_45263",
+          "pay_amt": 305599000.0,
+          "pay_cnt": 96,
+          "share": 0.0271,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:1358714"
+        },
+        {
+          "company_id": "U_8318",
+          "pay_amt": 302937000.0,
+          "pay_cnt": 1245,
+          "share": 0.0268,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Москва",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:124246"
+        },
+        {
+          "company_id": "U_117828",
+          "pay_amt": 281982000.0,
+          "pay_cnt": 104,
+          "share": 0.025,
+          "known": false,
+          "okved_code": null,
+          "okved_section": null,
+          "region": null,
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:427739"
+        },
+        {
+          "company_id": "U_139540",
+          "pay_amt": 247977000.0,
+          "pay_cnt": 202,
+          "share": 0.022,
+          "known": true,
+          "okved_code": "45.31.1",
+          "okved_section": "G",
+          "region": "Смоленская область",
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": "line:776809"
+        }
+      ],
+      "truncated": true
+    },
+    "self_payments_excluded": {
+      "pay_amt": 754711000.0,
+      "pay_cnt": 72,
+      "n_rows": 1
+    },
+    "period": null,
+    "note": "Обороты — только платежи, видимые банку, за неизвестный период; самоплатежи исключены; повторные строки пар просуммированы."
+  },
+  "sensitivity_factors": [
+    {
+      "code": "rate_sensitivity",
+      "level": "high",
+      "claim_type": "inference",
+      "rule_id": "rate_sensitivity_v1",
+      "rationale": "Есть продукты с процентной/кредитной составляющей (loans, leasing): изменения ключевой ставки и условий кредитования влияют на стоимость обслуживания и рефинансирования. Тип ставки (фиксированная/плавающая) и объём долга в данных неизвестны.",
+      "based_on": [
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "CL_PRODUCT_LOA_MARK",
+          "value": true
+        },
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "CL_PRODUCT_LEA_MARK",
+          "value": true
+        },
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "CL_PRODUCT_GAR_MARK",
+          "value": false
+        },
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "FACTORING_MARK",
+          "value": false
+        }
+      ],
+      "confidence": "medium",
+      "topics": [
+        "key_rate",
+        "credit_conditions",
+        "bond_market"
+      ],
+      "details": {
+        "products_present": [
+          "loans",
+          "leasing"
+        ]
+      }
+    },
+    {
+      "code": "deposit_income",
+      "level": "none",
+      "claim_type": "inference",
+      "rule_id": "deposit_income_v1",
+      "rationale": "Депозитных продуктов в данных нет.",
+      "based_on": [
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "CL_PRODUCT_DEP_MARK",
+          "value": false
+        }
+      ],
+      "confidence": "medium",
+      "topics": [
+        "deposit_rates",
+        "key_rate",
+        "liquidity"
+      ],
+      "details": {}
+    },
+    {
+      "code": "fx_and_trade_exposure",
+      "level": "high",
+      "claim_type": "inference",
+      "rule_id": "fx_trade_v1",
+      "rationale": "Компания есть в данных ФТС (внешнеэкономическая деятельность), страны: ОАЭ, КИТАЙ, ИТАЛИЯ: курсы валют, санкции и логистика могут влиять на расчёты и поставки. Направление (импорт/экспорт) в данных неизвестно.",
+      "based_on": [
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "FTS_FLAG",
+          "value": true
+        },
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "FTS_COUNTRY_NAME",
+          "value": "ОАЭ, КИТАЙ, ИТАЛИЯ"
+        },
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "OKFS_NAME",
+          "value": "ЧАСТНАЯ СОБСТВЕННОСТЬ"
+        }
+      ],
+      "confidence": "medium",
+      "topics": [
+        "fx_rates",
+        "sanctions",
+        "logistics",
+        "foreign_trade"
+      ],
+      "details": {
+        "countries": [
+          "ОАЭ",
+          "КИТАЙ",
+          "ИТАЛИЯ"
+        ],
+        "direction": null,
+        "fts_inconsistent": false,
+        "ownership_type": "private"
+      }
+    },
+    {
+      "code": "payroll_exposure",
+      "level": "high",
+      "claim_type": "inference",
+      "rule_id": "payroll_v1",
+      "rationale": "Численность по ФНС: Более 251; есть зарплатный проект. Рынок труда и рост зарплат влияют на фонд оплаты труда.",
+      "based_on": [
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "AMOUNT_WORKERS_FNS_GRADATION",
+          "value": "Более 251"
+        },
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "CL_PRODUCT_ZPP_MARK",
+          "value": true
+        }
+      ],
+      "confidence": "medium",
+      "topics": [
+        "labor_market",
+        "wage_inflation"
+      ],
+      "details": {
+        "workers_fns": "Более 251",
+        "payroll_project": true
+      }
+    },
+    {
+      "code": "consumer_exposure",
+      "level": "none",
+      "claim_type": "inference",
+      "rule_id": "consumer_v1",
+      "rationale": "Основной ОКВЭД не относится к потребительскому сектору (по правилам конфига).",
+      "based_on": [
+        {
+          "source_file": "df_Uid_data_hack.csv",
+          "source_row_id": "line:6325",
+          "source_field": "MAINOKVED_CODE",
+          "value": "45.31.1"
+        }
+      ],
+      "confidence": "medium",
+      "topics": [
+        "consumer_demand",
+        "inflation",
+        "retail"
+      ],
+      "details": {}
+    },
+    {
+      "code": "counterparty_concentration",
+      "level": "low",
+      "claim_type": "inference",
+      "rule_id": "concentration_v1",
+      "rationale": "Эвристика: доля крупнейшего контрагента в видимом банку обороте (входящие: 0.0639, исходящие: 0.274). Это не доказательство зависимости: банк видит только часть платежей, период неизвестен.",
+      "based_on": [
+        {
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": null,
+          "source_field": "PAY_AMT",
+          "value": "aggregated by counterparty, self-payments excluded"
+        }
+      ],
+      "confidence": "low",
+      "topics": [
+        "counterparty_risk"
+      ],
+      "details": {
+        "incoming": {
+          "level": "low",
+          "n_counterparties": 744,
+          "top1_share": 0.0639,
+          "top1_counterparty_id": "U_16260"
+        },
+        "outgoing": {
+          "level": "low",
+          "n_counterparties": 268,
+          "top1_share": 0.274,
+          "top1_counterparty_id": "U_191409"
+        },
+        "thresholds": {
+          "top1_share_high": 0.5,
+          "top1_share_medium": 0.3,
+          "min_counterparties": 5
+        }
+      }
+    },
+    {
+      "code": "supply_chain_industries",
+      "level": "info",
+      "claim_type": "inference",
+      "rule_id": "supply_chain_v1",
+      "rationale": "Отрасли контрагентов по ОКВЭД (получатели исходящих платежей — вероятные поставщики, плательщики входящих — вероятные покупатели). Новости этих отраслей могут касаться компании через цепочку поставок. Учтены только контрагенты, присутствующие в данных.",
+      "based_on": [
+        {
+          "source_file": "df_Uid_payment_hack.csv",
+          "source_row_id": null,
+          "source_field": "PAYER/BENEFICIARY",
+          "value": "counterparty MAINOKVED_CODE from companies file"
+        }
+      ],
+      "confidence": "medium",
+      "topics": [
+        "auto_market",
+        "consumer_credit",
+        "fx_rates",
+        "consumer_demand",
+        "logistics",
+        "wholesale_trade"
+      ],
+      "details": {
+        "suppliers": [
+          {
+            "okved_division": "45",
+            "okved_section": "G",
+            "okved_section_name": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+            "pay_amt": 5063066000.0,
+            "n_counterparties": 94,
+            "example_okved_codes": [
+              "45.31.1",
+              "45.3",
+              "45.31"
+            ],
+            "share_of_known": 0.5775
+          },
+          {
+            "okved_division": "46",
+            "okved_section": "G",
+            "okved_section_name": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+            "pay_amt": 3583428000.0,
+            "n_counterparties": 26,
+            "example_okved_codes": [
+              "46.90",
+              "46.71",
+              "46.19"
+            ],
+            "share_of_known": 0.4088
+          },
+          {
+            "okved_division": "52",
+            "okved_section": "H",
+            "okved_section_name": "Транспортировка и хранение",
+            "pay_amt": 46326000.0,
+            "n_counterparties": 9,
+            "example_okved_codes": [
+              "52.29"
+            ],
+            "share_of_known": 0.0053
+          },
+          {
+            "okved_division": "49",
+            "okved_section": "H",
+            "okved_section_name": "Транспортировка и хранение",
+            "pay_amt": 22508000.0,
+            "n_counterparties": 4,
+            "example_okved_codes": [
+              "49.41.2",
+              "49.41",
+              "49.42"
+            ],
+            "share_of_known": 0.0026
+          },
+          {
+            "okved_division": "68",
+            "okved_section": "L",
+            "okved_section_name": "Деятельность по операциям с недвижимым имуществом",
+            "pay_amt": 20887000.0,
+            "n_counterparties": 3,
+            "example_okved_codes": [
+              "68.10",
+              "68.20.2"
+            ],
+            "share_of_known": 0.0024
+          }
+        ],
+        "customers": [
+          {
+            "okved_division": "45",
+            "okved_section": "G",
+            "okved_section_name": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+            "pay_amt": 1562414000.0,
+            "n_counterparties": 221,
+            "example_okved_codes": [
+              "45.31.1",
+              "45.31",
+              "45.20.1"
+            ],
+            "share_of_known": 0.9036
+          },
+          {
+            "okved_division": "46",
+            "okved_section": "G",
+            "okved_section_name": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+            "pay_amt": 63146000.0,
+            "n_counterparties": 30,
+            "example_okved_codes": [
+              "46.61",
+              "46.90",
+              "46.21"
+            ],
+            "share_of_known": 0.0365
+          },
+          {
+            "okved_division": "49",
+            "okved_section": "H",
+            "okved_section_name": "Транспортировка и хранение",
+            "pay_amt": 33174000.0,
+            "n_counterparties": 11,
+            "example_okved_codes": [
+              "49.42",
+              "49.41.1",
+              "49.41.2"
+            ],
+            "share_of_known": 0.0192
+          },
+          {
+            "okved_division": "68",
+            "okved_section": "L",
+            "okved_section_name": "Деятельность по операциям с недвижимым имуществом",
+            "pay_amt": 30064000.0,
+            "n_counterparties": 2,
+            "example_okved_codes": [
+              "68.10",
+              "68.20.2"
+            ],
+            "share_of_known": 0.0174
+          },
+          {
+            "okved_division": "47",
+            "okved_section": "G",
+            "okved_section_name": "Торговля оптовая и розничная; ремонт автотранспортных средств и мотоциклов",
+            "pay_amt": 27871000.0,
+            "n_counterparties": 5,
+            "example_okved_codes": [
+              "47.91",
+              "47.19",
+              "47.30"
+            ],
+            "share_of_known": 0.0161
+          }
+        ],
+        "supplier_codes": [
+          {
+            "okved_code": "45.31.1",
+            "okved_levels": [
+              "45",
+              "45.3",
+              "45.31",
+              "45.31.1"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 3930344000.0,
+            "pay_cnt": 9067,
+            "n_counterparties": 57,
+            "share_of_known": 0.4483
+          },
+          {
+            "okved_code": "46.90",
+            "okved_levels": [
+              "46",
+              "46.9",
+              "46.90"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 3210345000.0,
+            "pay_cnt": 618,
+            "n_counterparties": 11,
+            "share_of_known": 0.3662
+          },
+          {
+            "okved_code": "45.3",
+            "okved_levels": [
+              "45",
+              "45.3"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 583846000.0,
+            "pay_cnt": 195,
+            "n_counterparties": 8,
+            "share_of_known": 0.0666
+          },
+          {
+            "okved_code": "45.31",
+            "okved_levels": [
+              "45",
+              "45.3",
+              "45.31"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 543164000.0,
+            "pay_cnt": 1285,
+            "n_counterparties": 22,
+            "share_of_known": 0.062
+          },
+          {
+            "okved_code": "46.71",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.71"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 312241000.0,
+            "pay_cnt": 159,
+            "n_counterparties": 6,
+            "share_of_known": 0.0356
+          },
+          {
+            "okved_code": "52.29",
+            "okved_levels": [
+              "52",
+              "52.2",
+              "52.29"
+            ],
+            "okved_division": "52",
+            "okved_section": "H",
+            "pay_amt": 46326000.0,
+            "pay_cnt": 117,
+            "n_counterparties": 9,
+            "share_of_known": 0.0053
+          },
+          {
+            "okved_code": "46.19",
+            "okved_levels": [
+              "46",
+              "46.1",
+              "46.19"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 21811000.0,
+            "pay_cnt": 8,
+            "n_counterparties": 1,
+            "share_of_known": 0.0025
+          },
+          {
+            "okved_code": "49.41.2",
+            "okved_levels": [
+              "49",
+              "49.4",
+              "49.41",
+              "49.41.2"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 19706000.0,
+            "pay_cnt": 54,
+            "n_counterparties": 1,
+            "share_of_known": 0.0022
+          },
+          {
+            "okved_code": "72.19",
+            "okved_levels": [
+              "72",
+              "72.1",
+              "72.19"
+            ],
+            "okved_division": "72",
+            "okved_section": "M",
+            "pay_amt": 17169000.0,
+            "pay_cnt": 48,
+            "n_counterparties": 1,
+            "share_of_known": 0.002
+          },
+          {
+            "okved_code": "46.73",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.73"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 16607000.0,
+            "pay_cnt": 68,
+            "n_counterparties": 1,
+            "share_of_known": 0.0019
+          },
+          {
+            "okved_code": "46.71.1",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.71",
+              "46.71.1"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 14291000.0,
+            "pay_cnt": 20,
+            "n_counterparties": 1,
+            "share_of_known": 0.0016
+          },
+          {
+            "okved_code": "68.10",
+            "okved_levels": [
+              "68",
+              "68.1",
+              "68.10"
+            ],
+            "okved_division": "68",
+            "okved_section": "L",
+            "pay_amt": 14074000.0,
+            "pay_cnt": 449,
+            "n_counterparties": 2,
+            "share_of_known": 0.0016
+          },
+          {
+            "okved_code": "62.01",
+            "okved_levels": [
+              "62",
+              "62.0",
+              "62.01"
+            ],
+            "okved_division": "62",
+            "okved_section": "J",
+            "pay_amt": 9863000.0,
+            "pay_cnt": 5,
+            "n_counterparties": 3,
+            "share_of_known": 0.0011
+          },
+          {
+            "okved_code": "68.20.2",
+            "okved_levels": [
+              "68",
+              "68.2",
+              "68.20",
+              "68.20.2"
+            ],
+            "okved_division": "68",
+            "okved_section": "L",
+            "pay_amt": 6813000.0,
+            "pay_cnt": 32,
+            "n_counterparties": 1,
+            "share_of_known": 0.0008
+          },
+          {
+            "okved_code": "46.51",
+            "okved_levels": [
+              "46",
+              "46.5",
+              "46.51"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 6188000.0,
+            "pay_cnt": 3,
+            "n_counterparties": 2,
+            "share_of_known": 0.0007
+          },
+          {
+            "okved_code": "45.20.1",
+            "okved_levels": [
+              "45",
+              "45.2",
+              "45.20",
+              "45.20.1"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 4074000.0,
+            "pay_cnt": 27,
+            "n_counterparties": 4,
+            "share_of_known": 0.0005
+          },
+          {
+            "okved_code": "49.41",
+            "okved_levels": [
+              "49",
+              "49.4",
+              "49.41"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 2230000.0,
+            "pay_cnt": 15,
+            "n_counterparties": 2,
+            "share_of_known": 0.0003
+          },
+          {
+            "okved_code": "63.11",
+            "okved_levels": [
+              "63",
+              "63.1",
+              "63.11"
+            ],
+            "okved_division": "63",
+            "okved_section": "J",
+            "pay_amt": 1972000.0,
+            "pay_cnt": 1,
+            "n_counterparties": 1,
+            "share_of_known": 0.0002
+          },
+          {
+            "okved_code": "45.11.2",
+            "okved_levels": [
+              "45",
+              "45.1",
+              "45.11",
+              "45.11.2"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 1289000.0,
+            "pay_cnt": 39,
+            "n_counterparties": 2,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "20.11",
+            "okved_levels": [
+              "20",
+              "20.1",
+              "20.11"
+            ],
+            "okved_division": "20",
+            "okved_section": "C",
+            "pay_amt": 942000.0,
+            "pay_cnt": 9,
+            "n_counterparties": 1,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "46.49",
+            "okved_levels": [
+              "46",
+              "46.4",
+              "46.49"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 929000.0,
+            "pay_cnt": 91,
+            "n_counterparties": 1,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "46.71.2",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.71",
+              "46.71.2"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 837000.0,
+            "pay_cnt": 4,
+            "n_counterparties": 1,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "49.42",
+            "okved_levels": [
+              "49",
+              "49.4",
+              "49.42"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 572000.0,
+            "pay_cnt": 1,
+            "n_counterparties": 1,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "45.32",
+            "okved_levels": [
+              "45",
+              "45.3",
+              "45.32"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 349000.0,
+            "pay_cnt": 3,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "46.69",
+            "okved_levels": [
+              "46",
+              "46.6",
+              "46.69"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 144000.0,
+            "pay_cnt": 5,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "43.99.7",
+            "okved_levels": [
+              "43",
+              "43.9",
+              "43.99",
+              "43.99.7"
+            ],
+            "okved_division": "43",
+            "okved_section": "F",
+            "pay_amt": 140000.0,
+            "pay_cnt": 3,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "80.10",
+            "okved_levels": [
+              "80",
+              "80.1",
+              "80.10"
+            ],
+            "okved_division": "80",
+            "okved_section": "N",
+            "pay_amt": 87000.0,
+            "pay_cnt": 29,
+            "n_counterparties": 2,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "56.10",
+            "okved_levels": [
+              "56",
+              "56.1",
+              "56.10"
+            ],
+            "okved_division": "56",
+            "okved_section": "I",
+            "pay_amt": 70000.0,
+            "pay_cnt": 1,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "46.69.5",
+            "okved_levels": [
+              "46",
+              "46.6",
+              "46.69",
+              "46.69.5"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 35000.0,
+            "pay_cnt": 2,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "47.11",
+            "okved_levels": [
+              "47",
+              "47.1",
+              "47.11"
+            ],
+            "okved_division": "47",
+            "okved_section": "G",
+            "pay_amt": 33000.0,
+            "pay_cnt": 1,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "38.32",
+            "okved_levels": [
+              "38",
+              "38.3",
+              "38.32"
+            ],
+            "okved_division": "38",
+            "okved_section": "E",
+            "pay_amt": 17000.0,
+            "pay_cnt": 1,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "80.20",
+            "okved_levels": [
+              "80",
+              "80.2",
+              "80.20"
+            ],
+            "okved_division": "80",
+            "okved_section": "N",
+            "pay_amt": 7000.0,
+            "pay_cnt": 6,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          }
+        ],
+        "customer_codes": [
+          {
+            "okved_code": "45.31.1",
+            "okved_levels": [
+              "45",
+              "45.3",
+              "45.31",
+              "45.31.1"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 907773000.0,
+            "pay_cnt": 8370,
+            "n_counterparties": 46,
+            "share_of_known": 0.525
+          },
+          {
+            "okved_code": "45.31",
+            "okved_levels": [
+              "45",
+              "45.3",
+              "45.31"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 276002000.0,
+            "pay_cnt": 3396,
+            "n_counterparties": 27,
+            "share_of_known": 0.1596
+          },
+          {
+            "okved_code": "45.20.1",
+            "okved_levels": [
+              "45",
+              "45.2",
+              "45.20",
+              "45.20.1"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 168535000.0,
+            "pay_cnt": 4183,
+            "n_counterparties": 49,
+            "share_of_known": 0.0975
+          },
+          {
+            "okved_code": "45.11.2",
+            "okved_levels": [
+              "45",
+              "45.1",
+              "45.11",
+              "45.11.2"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 89864000.0,
+            "pay_cnt": 3335,
+            "n_counterparties": 38,
+            "share_of_known": 0.052
+          },
+          {
+            "okved_code": "45.20",
+            "okved_levels": [
+              "45",
+              "45.2",
+              "45.20"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 44401000.0,
+            "pay_cnt": 1227,
+            "n_counterparties": 23,
+            "share_of_known": 0.0257
+          },
+          {
+            "okved_code": "68.10",
+            "okved_levels": [
+              "68",
+              "68.1",
+              "68.10"
+            ],
+            "okved_division": "68",
+            "okved_section": "L",
+            "pay_amt": 29995000.0,
+            "pay_cnt": 417,
+            "n_counterparties": 1,
+            "share_of_known": 0.0173
+          },
+          {
+            "okved_code": "45.3",
+            "okved_levels": [
+              "45",
+              "45.3"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 28000000.0,
+            "pay_cnt": 882,
+            "n_counterparties": 9,
+            "share_of_known": 0.0162
+          },
+          {
+            "okved_code": "49.42",
+            "okved_levels": [
+              "49",
+              "49.4",
+              "49.42"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 24764000.0,
+            "pay_cnt": 1449,
+            "n_counterparties": 2,
+            "share_of_known": 0.0143
+          },
+          {
+            "okved_code": "45.19.1",
+            "okved_levels": [
+              "45",
+              "45.1",
+              "45.19",
+              "45.19.1"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 21471000.0,
+            "pay_cnt": 126,
+            "n_counterparties": 4,
+            "share_of_known": 0.0124
+          },
+          {
+            "okved_code": "46.61",
+            "okved_levels": [
+              "46",
+              "46.6",
+              "46.61"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 19843000.0,
+            "pay_cnt": 106,
+            "n_counterparties": 1,
+            "share_of_known": 0.0115
+          },
+          {
+            "okved_code": "45.32",
+            "okved_levels": [
+              "45",
+              "45.3",
+              "45.32"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 19767000.0,
+            "pay_cnt": 342,
+            "n_counterparties": 7,
+            "share_of_known": 0.0114
+          },
+          {
+            "okved_code": "47.91",
+            "okved_levels": [
+              "47",
+              "47.9",
+              "47.91"
+            ],
+            "okved_division": "47",
+            "okved_section": "G",
+            "pay_amt": 17894000.0,
+            "pay_cnt": 996,
+            "n_counterparties": 2,
+            "share_of_known": 0.0103
+          },
+          {
+            "okved_code": "46.90",
+            "okved_levels": [
+              "46",
+              "46.9",
+              "46.90"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 14953000.0,
+            "pay_cnt": 1588,
+            "n_counterparties": 10,
+            "share_of_known": 0.0086
+          },
+          {
+            "okved_code": "47.19",
+            "okved_levels": [
+              "47",
+              "47.1",
+              "47.19"
+            ],
+            "okved_division": "47",
+            "okved_section": "G",
+            "pay_amt": 9890000.0,
+            "pay_cnt": 75,
+            "n_counterparties": 1,
+            "share_of_known": 0.0057
+          },
+          {
+            "okved_code": "46.21",
+            "okved_levels": [
+              "46",
+              "46.2",
+              "46.21"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 8996000.0,
+            "pay_cnt": 45,
+            "n_counterparties": 1,
+            "share_of_known": 0.0052
+          },
+          {
+            "okved_code": "49.41.1",
+            "okved_levels": [
+              "49",
+              "49.4",
+              "49.41",
+              "49.41.1"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 6724000.0,
+            "pay_cnt": 107,
+            "n_counterparties": 4,
+            "share_of_known": 0.0039
+          },
+          {
+            "okved_code": "46.75.2",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.75",
+              "46.75.2"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 6597000.0,
+            "pay_cnt": 585,
+            "n_counterparties": 2,
+            "share_of_known": 0.0038
+          },
+          {
+            "okved_code": "52.29",
+            "okved_levels": [
+              "52",
+              "52.2",
+              "52.29"
+            ],
+            "okved_division": "52",
+            "okved_section": "H",
+            "pay_amt": 4775000.0,
+            "pay_cnt": 49,
+            "n_counterparties": 3,
+            "share_of_known": 0.0028
+          },
+          {
+            "okved_code": "46.71.2",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.71",
+              "46.71.2"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 3823000.0,
+            "pay_cnt": 84,
+            "n_counterparties": 1,
+            "share_of_known": 0.0022
+          },
+          {
+            "okved_code": "33.12",
+            "okved_levels": [
+              "33",
+              "33.1",
+              "33.12"
+            ],
+            "okved_division": "33",
+            "okved_section": "C",
+            "pay_amt": 3469000.0,
+            "pay_cnt": 262,
+            "n_counterparties": 8,
+            "share_of_known": 0.002
+          },
+          {
+            "okved_code": "46.52",
+            "okved_levels": [
+              "46",
+              "46.5",
+              "46.52"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 3058000.0,
+            "pay_cnt": 407,
+            "n_counterparties": 1,
+            "share_of_known": 0.0018
+          },
+          {
+            "okved_code": "45.1",
+            "okved_levels": [
+              "45",
+              "45.1"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 2753000.0,
+            "pay_cnt": 147,
+            "n_counterparties": 7,
+            "share_of_known": 0.0016
+          },
+          {
+            "okved_code": "46.71",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.71"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 2510000.0,
+            "pay_cnt": 204,
+            "n_counterparties": 4,
+            "share_of_known": 0.0015
+          },
+          {
+            "okved_code": "70.22",
+            "okved_levels": [
+              "70",
+              "70.2",
+              "70.22"
+            ],
+            "okved_division": "70",
+            "okved_section": "M",
+            "pay_amt": 1953000.0,
+            "pay_cnt": 118,
+            "n_counterparties": 1,
+            "share_of_known": 0.0011
+          },
+          {
+            "okved_code": "45.20.2",
+            "okved_levels": [
+              "45",
+              "45.2",
+              "45.20",
+              "45.20.2"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 1369000.0,
+            "pay_cnt": 51,
+            "n_counterparties": 3,
+            "share_of_known": 0.0008
+          },
+          {
+            "okved_code": "46.69",
+            "okved_levels": [
+              "46",
+              "46.6",
+              "46.69"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 1029000.0,
+            "pay_cnt": 35,
+            "n_counterparties": 2,
+            "share_of_known": 0.0006
+          },
+          {
+            "okved_code": "45.19",
+            "okved_levels": [
+              "45",
+              "45.1",
+              "45.19"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 993000.0,
+            "pay_cnt": 21,
+            "n_counterparties": 1,
+            "share_of_known": 0.0006
+          },
+          {
+            "okved_code": "45.11",
+            "okved_levels": [
+              "45",
+              "45.1",
+              "45.11"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 890000.0,
+            "pay_cnt": 51,
+            "n_counterparties": 3,
+            "share_of_known": 0.0005
+          },
+          {
+            "okved_code": "46.63",
+            "okved_levels": [
+              "46",
+              "46.6",
+              "46.63"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 813000.0,
+            "pay_cnt": 50,
+            "n_counterparties": 3,
+            "share_of_known": 0.0005
+          },
+          {
+            "okved_code": "49.41",
+            "okved_levels": [
+              "49",
+              "49.4",
+              "49.41"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 784000.0,
+            "pay_cnt": 48,
+            "n_counterparties": 3,
+            "share_of_known": 0.0005
+          },
+          {
+            "okved_code": "43.13",
+            "okved_levels": [
+              "43",
+              "43.1",
+              "43.13"
+            ],
+            "okved_division": "43",
+            "okved_section": "F",
+            "pay_amt": 776000.0,
+            "pay_cnt": 95,
+            "n_counterparties": 1,
+            "share_of_known": 0.0004
+          },
+          {
+            "okved_code": "53.20.3",
+            "okved_levels": [
+              "53",
+              "53.2",
+              "53.20",
+              "53.20.3"
+            ],
+            "okved_division": "53",
+            "okved_section": "H",
+            "pay_amt": 676000.0,
+            "pay_cnt": 23,
+            "n_counterparties": 1,
+            "share_of_known": 0.0004
+          },
+          {
+            "okved_code": "46.49",
+            "okved_levels": [
+              "46",
+              "46.4",
+              "46.49"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 627000.0,
+            "pay_cnt": 112,
+            "n_counterparties": 1,
+            "share_of_known": 0.0004
+          },
+          {
+            "okved_code": "49.41.2",
+            "okved_levels": [
+              "49",
+              "49.4",
+              "49.41",
+              "49.41.2"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 603000.0,
+            "pay_cnt": 86,
+            "n_counterparties": 1,
+            "share_of_known": 0.0003
+          },
+          {
+            "okved_code": "46.51",
+            "okved_levels": [
+              "46",
+              "46.5",
+              "46.51"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 557000.0,
+            "pay_cnt": 27,
+            "n_counterparties": 1,
+            "share_of_known": 0.0003
+          },
+          {
+            "okved_code": "45.2",
+            "okved_levels": [
+              "45",
+              "45.2"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 325000.0,
+            "pay_cnt": 49,
+            "n_counterparties": 2,
+            "share_of_known": 0.0002
+          },
+          {
+            "okved_code": "46.74",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.74"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 323000.0,
+            "pay_cnt": 26,
+            "n_counterparties": 1,
+            "share_of_known": 0.0002
+          },
+          {
+            "okved_code": "43.21",
+            "okved_levels": [
+              "43",
+              "43.2",
+              "43.21"
+            ],
+            "okved_division": "43",
+            "okved_section": "F",
+            "pay_amt": 302000.0,
+            "pay_cnt": 8,
+            "n_counterparties": 1,
+            "share_of_known": 0.0002
+          },
+          {
+            "okved_code": "49.32",
+            "okved_levels": [
+              "49",
+              "49.3",
+              "49.32"
+            ],
+            "okved_division": "49",
+            "okved_section": "H",
+            "pay_amt": 299000.0,
+            "pay_cnt": 59,
+            "n_counterparties": 1,
+            "share_of_known": 0.0002
+          },
+          {
+            "okved_code": "45.40",
+            "okved_levels": [
+              "45",
+              "45.4",
+              "45.40"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 206000.0,
+            "pay_cnt": 10,
+            "n_counterparties": 1,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "20.15",
+            "okved_levels": [
+              "20",
+              "20.1",
+              "20.15"
+            ],
+            "okved_division": "20",
+            "okved_section": "C",
+            "pay_amt": 157000.0,
+            "pay_cnt": 11,
+            "n_counterparties": 1,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "23.63",
+            "okved_levels": [
+              "23",
+              "23.6",
+              "23.63"
+            ],
+            "okved_division": "23",
+            "okved_section": "C",
+            "pay_amt": 154000.0,
+            "pay_cnt": 13,
+            "n_counterparties": 1,
+            "share_of_known": 0.0001
+          },
+          {
+            "okved_code": "68.20.2",
+            "okved_levels": [
+              "68",
+              "68.2",
+              "68.20",
+              "68.20.2"
+            ],
+            "okved_division": "68",
+            "okved_section": "L",
+            "pay_amt": 69000.0,
+            "pay_cnt": 19,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "47.30",
+            "okved_levels": [
+              "47",
+              "47.3",
+              "47.30"
+            ],
+            "okved_division": "47",
+            "okved_section": "G",
+            "pay_amt": 66000.0,
+            "pay_cnt": 5,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "45.11.1",
+            "okved_levels": [
+              "45",
+              "45.1",
+              "45.11",
+              "45.11.1"
+            ],
+            "okved_division": "45",
+            "okved_section": "G",
+            "pay_amt": 65000.0,
+            "pay_cnt": 21,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "41.20",
+            "okved_levels": [
+              "41",
+              "41.2",
+              "41.20"
+            ],
+            "okved_division": "41",
+            "okved_section": "F",
+            "pay_amt": 47000.0,
+            "pay_cnt": 18,
+            "n_counterparties": 2,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "27.90",
+            "okved_levels": [
+              "27",
+              "27.9",
+              "27.90"
+            ],
+            "okved_division": "27",
+            "okved_section": "C",
+            "pay_amt": 44000.0,
+            "pay_cnt": 2,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "42.21",
+            "okved_levels": [
+              "42",
+              "42.2",
+              "42.21"
+            ],
+            "okved_division": "42",
+            "okved_section": "F",
+            "pay_amt": 42000.0,
+            "pay_cnt": 1,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "47.11",
+            "okved_levels": [
+              "47",
+              "47.1",
+              "47.11"
+            ],
+            "okved_division": "47",
+            "okved_section": "G",
+            "pay_amt": 21000.0,
+            "pay_cnt": 1,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          },
+          {
+            "okved_code": "46.71.9",
+            "okved_levels": [
+              "46",
+              "46.7",
+              "46.71",
+              "46.71.9"
+            ],
+            "okved_division": "46",
+            "okved_section": "G",
+            "pay_amt": 11000.0,
+            "pay_cnt": 6,
+            "n_counterparties": 1,
+            "share_of_known": 0.0
+          }
+        ],
+        "supplier_codes_meta": {
+          "n_codes": 32,
+          "truncated": false,
+          "omitted_share_of_known": 0.0
+        },
+        "customer_codes_meta": {
+          "n_codes": 51,
+          "truncated": true,
+          "omitted_share_of_known": 0.0
+        },
+        "rule_shares": {
+          "auto": 0.9036,
+          "chemicals_pharma": 0.0001,
+          "construction_real_estate": 0.0181,
+          "hospitality_food_service": 0.0,
+          "it_telecom": 0.0014,
+          "professional_services": 0.002,
+          "retail_trade": 0.0161,
+          "transport_logistics": 0.0223,
+          "wholesale_trade": 0.4088
+        },
+        "topic_shares": {
+          "wholesale_trade": 0.4088,
+          "consumer_demand": 0.4088,
+          "fx_rates": 0.9036,
+          "logistics": 0.4088,
+          "auto_market": 0.9036,
+          "consumer_credit": 0.9036
+        },
+        "known_coverage_outgoing": 0.777,
+        "known_coverage_incoming": 0.507
+      }
+    }
+  ],
+  "topics": [
+    {
+      "topic": "auto_market",
+      "weight": 1.0,
+      "sources": [
+        {
+          "source": "industry:auto",
+          "weight": 1.0
+        },
+        {
+          "source": "factor:supply_chain_industries",
+          "weight": 0.4518
+        }
+      ]
+    },
+    {
+      "topic": "consumer_credit",
+      "weight": 1.0,
+      "sources": [
+        {
+          "source": "industry:auto",
+          "weight": 1.0
+        },
+        {
+          "source": "factor:supply_chain_industries",
+          "weight": 0.4518
+        }
+      ]
+    },
+    {
+      "topic": "fx_rates",
+      "weight": 1.0,
+      "sources": [
+        {
+          "source": "industry:auto",
+          "weight": 1.0
+        },
+        {
+          "source": "factor:fx_and_trade_exposure",
+          "weight": 0.8
+        },
+        {
+          "source": "factor:supply_chain_industries",
+          "weight": 0.4518
+        }
+      ]
+    },
+    {
+      "topic": "logistics",
+      "weight": 1.0,
+      "sources": [
+        {
+          "source": "factor:fx_and_trade_exposure",
+          "weight": 0.8
+        },
+        {
+          "source": "factor:supply_chain_industries",
+          "weight": 0.2044
+        }
+      ]
+    },
+    {
+      "topic": "bond_market",
+      "weight": 0.8,
+      "sources": [
+        {
+          "source": "factor:rate_sensitivity",
+          "weight": 0.8
+        }
+      ]
+    },
+    {
+      "topic": "credit_conditions",
+      "weight": 0.8,
+      "sources": [
+        {
+          "source": "factor:rate_sensitivity",
+          "weight": 0.8
+        }
+      ]
+    },
+    {
+      "topic": "foreign_trade",
+      "weight": 0.8,
+      "sources": [
+        {
+          "source": "factor:fx_and_trade_exposure",
+          "weight": 0.8
+        }
+      ]
+    },
+    {
+      "topic": "key_rate",
+      "weight": 0.8,
+      "sources": [
+        {
+          "source": "factor:rate_sensitivity",
+          "weight": 0.8
+        }
+      ]
+    },
+    {
+      "topic": "labor_market",
+      "weight": 0.8,
+      "sources": [
+        {
+          "source": "factor:payroll_exposure",
+          "weight": 0.8
+        }
+      ]
+    },
+    {
+      "topic": "sanctions",
+      "weight": 0.8,
+      "sources": [
+        {
+          "source": "factor:fx_and_trade_exposure",
+          "weight": 0.8
+        }
+      ]
+    },
+    {
+      "topic": "wage_inflation",
+      "weight": 0.8,
+      "sources": [
+        {
+          "source": "factor:payroll_exposure",
+          "weight": 0.8
+        }
+      ]
+    },
+    {
+      "topic": "consumer_demand",
+      "weight": 0.2044,
+      "sources": [
+        {
+          "source": "factor:supply_chain_industries",
+          "weight": 0.2044
+        }
+      ]
+    },
+    {
+      "topic": "wholesale_trade",
+      "weight": 0.2044,
+      "sources": [
+        {
+          "source": "factor:supply_chain_industries",
+          "weight": 0.2044
+        }
+      ]
+    }
+  ],
+  "data_gaps": [
+    {
+      "code": "revenue_unit_unknown",
+      "message": "Единицы и период выручки не подтверждены",
+      "fields": [
+        "REVENUE_COMPANY"
+      ]
+    },
+    {
+      "code": "no_dates",
+      "message": "В данных нет дат: as_of неизвестен, временные агрегаты не строятся",
+      "fields": []
+    },
+    {
+      "code": "trade_direction_unknown",
+      "message": "Направление ВЭД (импорт/экспорт) неизвестно",
+      "fields": [
+        "FTS_FLAG",
+        "FTS_COUNTRY_NAME"
+      ]
+    },
+    {
+      "code": "spark_missing",
+      "message": "Численность по СПАРК не указана",
+      "fields": [
+        "AMOUNT_WORKERS_SPARK_GRADATION"
+      ]
+    },
+    {
+      "code": "counterparty_attributes_missing",
+      "message": "Часть контрагентов отсутствует в файле юрлиц: их отрасль и регион неизвестны",
+      "fields": [
+        "PAYER",
+        "BENEFICIARY"
+      ]
+    }
+  ],
+  "reliability_notes": [
+    "Обороты рассчитаны по платежам, видимым банку, и не равны полному обороту компании.",
+    "Связи (группа, общие физлица, платежи) не означают контроль или общего собственника.",
+    "Производные признаки — правила-эвристики прототипа (feature_rules.yaml), не оценка банка."
+  ],
+  "quality_issues": []
+}

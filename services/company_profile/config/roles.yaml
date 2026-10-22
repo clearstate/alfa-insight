@@ -1,0 +1,32 @@
+# Роли пользователей и приоритетные темы. Используются ранжированием (4), агентом (3) и UI (5).
+# Темы — из словаря тем в docs/company_profile_contract.md. Порядок = приоритет.
+version: 1
+roles:
+  owner:
+    title: "Собственник бизнеса"
+    priority_topics: [gdp, sanctions, regulation, counterparty_risk, key_rate, business_activity]
+    focus: "Стратегия, макрофон, риски группы и контрагентов"
+  ceo:
+    title: "Генеральный директор"
+    priority_topics: [gdp, consumer_demand, business_activity, sanctions, regulation, commodities]
+    focus: "Спрос, отрасль, операционные риски"
+  cfo:
+    title: "Финансовый директор"
+    priority_topics: [key_rate, credit_conditions, bond_market, inflation, fx_rates, liquidity]
+    focus: "Стоимость и доступность финансирования, ставка, инфляция"
+  chief_accountant:
+    title: "Главный бухгалтер"
+    priority_topics: [taxes, regulation, financial_regulation, wage_inflation, labor_market]
+    focus: "Налоги, регулирование, отчётность, зарплатные расходы"
+  treasury:
+    title: "Руководитель казначейства"
+    priority_topics: [fx_rates, liquidity, deposit_rates, key_rate, bond_market, gold]
+    focus: "Курсы, ликвидность, размещение средств"
+  other_c_level:
+    title: "Другой C-level-руководитель"
+    priority_topics: [business_activity, gdp, labor_market]
+    focus: "Отрасль и макрофон в целом"
+  other:
+    title: "Иной сотрудник"
+    priority_topics: []
+    focus: "Без приоритета, только темы компании"

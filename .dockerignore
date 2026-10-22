@@ -1,0 +1,13 @@
+.git
+.env
+**/__pycache__
+.pytest_cache
+data/raw
+data/runtime
+data/*.db
+frontend/node_modules
+frontend/src
+tests
+start.bat
+start.sh
+docs/screenshots
