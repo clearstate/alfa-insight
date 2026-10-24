@@ -3,3 +3,4 @@
 Опирается на модули участников: company_profile (профиль компании) и news_ingest (новости и аналитика банка).
 """
 SCHEMA_VERSION = "insight/1.0"
+APP_VERSION = "1.6.0"

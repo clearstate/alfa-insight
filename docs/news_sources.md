@@ -19,8 +19,13 @@
 | id | Тип | Способ | Поля | Частота | Ограничения | Надёжность | Статус |
 |---|---|---|---|---|---|---|---|
 | alfa_bank_analytics | bank_analytics | файлы + сайдкары | всё | по мере публикации | авторские права банка | 0.9 (позиции банка — `bank_view`) | включён |
-| cbr_press | regulator | RSS `https://www.cbr.ru/rss/RssPress` + страницы | title, link, pubDate, description | 15 мин | robots.txt/условия не проверены | 0.95 | **выключен, URL не проверен** |
+| cbr_press | regulator | RSS `https://www.cbr.ru/rss/RssPress` + страницы | title, link, pubDate, description (HTML) | 30 мин (`interval_min`) | robots.txt разрешает (проверено 2026-10-22); на страницах нет машиночитаемой даты — дата из pubDate | 0.95 | **включён**, живой импорт подтверждён 2026-10-22 (13 записей) |
+| interfax | media | RSS `https://www.interfax.ru/rss.asp` + страницы | title, link, pubDate, description; текст статьи | 30 мин | robots.txt разрешает ленту и статьи (2026-10-23) | 0.8 | **включён** |
+| rbc | media | RSS `https://rssexport.rbc.ru/rbcnews/news/30/full.rss` | полный текст в `rbc_news:full-text` | 30 мин | страницы статей ботам не отдаются — текст из ленты (`rss_full`) | 0.75 | **включён** |
+| tass | media | RSS `https://tass.ru/rss/v2.xml` | title, link, pubDate, description | 30 мин | страницы статей отвечают 403 — `fetch_articles: false`, сохранение по описанию (`summary_only`) | 0.8 | **включён** |
 | manual_file | user_submitted | API/CLI | произвольно | по запросу | SSRF-защита, лимиты | 0.3 | включён |
+
+Проверены и **не используются**: Коммерсант, Lenta.ru, ПРАЙМ — robots.txt запрещает обход лент; Ведомости — в ленте нет описаний, страница статьи содержит только анонс; RSS Минфина и Минэкономразвития по известным адресам отсутствуют (404).
 
 Кандидаты на проверку командой с сетью (не включать без проверки robots.txt и условий использования): пресс-релизы Минэкономразвития, Росстата (RSS/официальные страницы), деловые СМИ с открытым RSS. `cli verify-sources` печатает отчёт по robots/доступности/формату.
 Если источник недоступен — `cli import-file` / `POST /api/news/ingest` с текстом.

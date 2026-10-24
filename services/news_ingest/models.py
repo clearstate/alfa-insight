@@ -119,7 +119,7 @@ class NewsItem:
     source_reliability: dict[str, Any] = field(default_factory=dict)
     provenance: dict[str, Any] = field(default_factory=dict)
     processing_status: str = "ok"
-    status_reasons: list[str] = field(default_factory=list)
+    status_reasons: "list[str]" = field(default_factory=list)
     security_flags: list[str] = field(default_factory=list)
     extraction: dict[str, Any] = field(default_factory=dict)
     bank: dict[str, Any] | None = None

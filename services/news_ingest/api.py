@@ -4,14 +4,13 @@
 Авторизация — как у company_profile: заголовок X-User-ID (current_user). Новости не персональны, поэтому читать может любой
 аутентифицированный пользователь; персональный отбор и ранжирование — участник 4. Запуск ingest — только пользователи из
 NEWS_INGEST_USERS (через запятую) либо при NEWS_INGEST_OPEN=1 (демо). Каждое обращение пишется в audit-журнал.
-ВНИМАНИЕ: файл не запускался в среде разработки (нет fastapi/pydantic) — проверить на docker compose (см. README).
 """
 from __future__ import annotations
 
 import os
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Header, Query, Request
 
 from contracts.news_item import (Chunk, IndicatorRow, IngestRequest, IngestResponse, NewsCandidate, NewsItem)
 from services.company_profile.access import UserContext
@@ -19,6 +18,8 @@ from services.company_profile.errors import ApiError, audit, correlation_id
 from services.company_profile.router import current_user
 
 from . import indicators as ind
+from . import scheduler
+from .auth_shim import TokenAuth
 from .pipeline import IngestPipeline
 from .store import NewsStore
 
@@ -33,6 +34,17 @@ def get_pipeline(request: Request) -> IngestPipeline:
     return request.app.state.news_pipeline
 
 
+def token_user(request: Request, authorization: str | None = Header(default=None)) -> UserContext:
+    """Замена `current_user` в автономном режиме NEWS_STANDALONE_AUTH=token (app.dependency_overrides), см. auth_shim."""
+    auth: TokenAuth = request.app.state.news_token_auth
+    scheme, _, token = (authorization or "").partition(" ")
+    user = auth.user_for_token(token.strip()) if scheme.lower() == "bearer" else None
+    if user is None:
+        audit("auth_failed", request, reason="missing_token" if not authorization else "invalid_token")
+        raise ApiError(401, "unauthenticated", "Требуется заголовок Authorization: Bearer <токен>")
+    return user
+
+
 def _may_ingest(user: UserContext) -> bool:
     if os.getenv("NEWS_INGEST_OPEN") == "1":
         return True
@@ -40,8 +52,10 @@ def _may_ingest(user: UserContext) -> bool:
 
 
 @router.get("/news/health")
-def health(store: NewsStore = Depends(get_store)) -> dict[str, Any]:
-    return {"status": "ok", **store.stats()}
+def health(store: NewsStore = Depends(get_store), pipe: IngestPipeline = Depends(get_pipeline)) -> dict[str, Any]:
+    """Без аутентификации: счётчики и свежесть лент. status=degraded — последний успешный прогон источника просрочен."""
+    fresh = scheduler.freshness(store, pipe.sources, pipe.clock())
+    return {"status": "ok" if fresh["status"] in ("ok", "no_sources") else "degraded", **store.stats(), "freshness": fresh}
 
 
 @router.post("/news/ingest", response_model=IngestResponse)

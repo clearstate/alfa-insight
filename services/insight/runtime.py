@@ -13,7 +13,6 @@ class Journal:
         runtime_dir.mkdir(parents=True, exist_ok=True)
         self.dir = runtime_dir
         self.lock = threading.Lock()
-        self.latency: list[float] = []
 
     def write(self, name: str, rec: dict) -> dict:
         rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), **rec}
@@ -40,18 +39,19 @@ class Journal:
         fb = self.read("feedback")
         votes = Counter(f.get("rating") for f in fb)
         total = votes.get("up", 0) + votes.get("down", 0)
-        runs = agent.audit
-        checks_failed = sum(1 for k in agent.cache.values() if not (k.get("checks") or {}).get("passed", True))
-        n = max(1, len(agent.cache))
+        runs, built = list(agent.audit), list(agent.cache.copy().values())      # снимки: сервер многопоточный
+        checks_failed = sum(1 for k in built if not (k.get("checks") or {}).get("passed", True))
+        n = max(1, len(built))
         lat = sorted(r["ms"] for r in runs) or [0]
         return {
             "content": {"items": len(kb.items), "bank_docs": sum(1 for i in kb.items.values() if i["kind"] == "bank"),
                         "needs_review": sum(1 for i in kb.items.values() if i.get("processing_status") != "ok"),
                         "blocked_injection": sum(1 for i in kb.items.values() if i.get("injection")),
                         "unconfirmed": sum(1 for i in kb.items.values() if i.get("unconfirmed")), "stale": sum(1 for i in kb.items.values() if i.get("stale"))},
-            "quality": {"insights_built": len(agent.cache), "self_check_failed_share": round(checks_failed / n, 3),
+            "quality": {"insights_built": len(built), "self_check_failed_share": round(checks_failed / n, 3),
                         "useful_share": round(votes.get("up", 0) / total, 3) if total else None, "feedback_total": total,
                         "irrelevant_reports": sum(1 for f in fb if f.get("reason") == "irrelevant"),
+                        "hidden_by_users": sum(1 for h in self.read("hidden") if h.get("hidden")),
                         "p50_ms": lat[len(lat) // 2], "p95_ms": lat[min(len(lat) - 1, int(len(lat) * 0.95))]},
             "usage": {"actions": Counter(a.get("type") for a in self.read("actions")), "questions": len(self.read("questions"))},
             "llm": llm.status(), "kb": kb.stats(),

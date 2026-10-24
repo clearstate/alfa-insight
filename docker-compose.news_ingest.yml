@@ -1,8 +1,22 @@
-# Локальный стенд news_ingest: PostgreSQL + API (порт 8002). Не запускался в среде разработки (нет Docker) — проверить на стенде.
-#   cp .env.example .env  (POSTGRES_PASSWORD, при желании LLM_BASE_URL/LLM_API_KEY)
+# Стенд news_ingest: PostgreSQL + API (порт 8002) + обход лент по расписанию. Не запускался в среде разработки (нет Docker) —
+# проверить на стенде.
+#   cp .env.example .env    задать POSTGRES_PASSWORD, NEWS_API_TOKENS и NEWS_INGEST_USERS. Токен для пользователя alice
+#                           (печатает токен — выдать пользователю — и строку для NEWS_API_TOKENS; нужен только Python):
+#     python -c "import secrets,hashlib;t=secrets.token_urlsafe(32);print(t);print('alice:'+hashlib.sha256(t.encode()).hexdigest())"
+#                           (то же из установленного проекта: python -m services.news_ingest.cli gen-token alice)
 #   docker compose -f docker-compose.news_ingest.yml up --build
+# Безопасность по умолчанию: авторизация по Bearer-токенам (в .env только их хеши), ингест — только пользователям из
+# NEWS_INGEST_USERS, порт API опубликован только на 127.0.0.1 (наружу — через reverse-proxy с TLS, NEWS_INGEST_BIND менять
+# осознанно), PostgreSQL наружу не публикуется.
 # Первая вертикаль: при старте API (NEWS_BOOTSTRAP_BANK=1) загружаются 9 документов банка из data/bank_analytics.
-# Участник 6: перенести сервис в общий docker-compose; схема БД — `news_ingest` (создаётся автоматически).
+# Участник 6: перенести сервисы в общий docker-compose; схема БД — `news_ingest` (создаётся автоматически).
+x-news-env: &news-env
+  NEWS_DB_URL: postgresql://${POSTGRES_USER:-alfa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-alfa_insight}
+  LLM_BASE_URL: ${LLM_BASE_URL:-}
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_DAILY_TOKEN_BUDGET: ${LLM_DAILY_TOKEN_BUDGET:-150000}
+  NEWS_ALLOWED_DOMAINS: ${NEWS_ALLOWED_DOMAINS:-}
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -16,19 +30,44 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+    restart: unless-stopped
 
   news-ingest-api:
     build: {context: ., dockerfile: Dockerfile.news_ingest}
     environment:
-      NEWS_DB_URL: postgresql://${POSTGRES_USER:-alfa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-alfa_insight}
+      <<: *news-env
       NEWS_BOOTSTRAP_BANK: "1"
-      NEWS_STANDALONE_AUTH: demo   # заглушка X-User-ID; в общем приложении убрать
-      NEWS_INGEST_OPEN: ${NEWS_INGEST_OPEN:-1}
-      LLM_BASE_URL: ${LLM_BASE_URL:-}
-      LLM_API_KEY: ${LLM_API_KEY:-}
-      LLM_DAILY_TOKEN_BUDGET: ${LLM_DAILY_TOKEN_BUDGET:-150000}
-    ports: ["${NEWS_INGEST_PORT:-8002}:8002"]
+      NEWS_STANDALONE_AUTH: token
+      NEWS_API_TOKENS: ${NEWS_API_TOKENS:?set NEWS_API_TOKENS in .env (cli gen-token USER_ID)}
+      NEWS_INGEST_USERS: ${NEWS_INGEST_USERS:-}
+      NEWS_INGEST_OPEN: "0"
+    ports: ["${NEWS_INGEST_BIND:-127.0.0.1}:${NEWS_INGEST_PORT:-8002}:8002"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/api/news/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
     depends_on:
       postgres: {condition: service_healthy}
+    restart: unless-stopped
+
+  # Обход включённых лент (sources.yaml: enabled, interval_min). Контейнер становится unhealthy, если последний успешный
+  # обход какого-либо источника старше max_staleness_min (cli freshness) — сигнал для мониторинга.
+  news-ingest-scheduler:
+    build: {context: ., dockerfile: Dockerfile.news_ingest}
+    command: ["python", "-m", "services.news_ingest.cli", "schedule", "--loop"]
+    environment:
+      <<: *news-env
+    healthcheck:
+      test: ["CMD", "python", "-m", "services.news_ingest.cli", "freshness"]
+      interval: 5m
+      timeout: 60s
+      retries: 1
+      start_period: 15m
+    depends_on:
+      news-ingest-api: {condition: service_healthy}   # схема БД создаётся API; без гонки параллельного CREATE
+    restart: unless-stopped
+
 volumes:
   pgdata_news:

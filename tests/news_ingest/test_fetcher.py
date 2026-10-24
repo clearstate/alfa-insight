@@ -102,6 +102,18 @@ class Fetcher(unittest.TestCase):
             with self.assertRaises(FetchError):
                 F(respect_robots=True, retries=0).fetch(s.base + "/p")
 
+    def test_robots_error_is_retried_after_ttl(self):
+        """Временная ошибка robots.txt не блокирует источник навсегда (важно для постоянного процесса расписания)."""
+        t = [0.0]
+        robots = lambda n: (500, {}, b"") if n == 1 else (200, {"Content-Type": "text/plain"}, b"User-agent: *\nAllow: /\n")
+        with Server({"/robots.txt": robots, "/p": (200, {"Content-Type": "text/html"}, b"<html>ok</html>")}) as s:
+            f = F(respect_robots=True, retries=0, clock=lambda: t[0])
+            with self.assertRaises(FetchError):
+                f.fetch(s.base + "/p")
+            t[0] += 11 * 60
+            self.assertEqual(f.fetch(s.base + "/p").status, 200)
+            self.assertEqual(s.hits["/robots.txt"], 2)
+
     def test_rate_limit_sleeps(self):
         sleeps, t = [], [0.0]
         with Server({"/a": (200, {"Content-Type": "text/html"}, b"<html>a</html>")}) as s:

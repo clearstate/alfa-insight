@@ -18,7 +18,8 @@ E=[ # id, terms, prefixes, industry_rule, ambiguous_terms, note
 ("wholesale",["оптовая торговля","оптовик","дистрибуц","дистрибьютор"],["46"],"wholesale_trade",[],None),
 ("food_service",["общепит","ресторан","кафе","доставка еды"],["56"],"hospitality_food_service",[],None),
 ("hospitality_tourism",["туризм","туристическ","гостиниц","отел","туроператор","турагент"],["55","79"],"hospitality_food_service",[],None),
-("auto",["автопром","автомобил","автодилер","авторынок","автозапчаст"],["29","45"],"auto",[],None),
+("auto",["автопром","автомобил","автодилер","авторынок"],["29","45"],"auto",[],None),
+("auto_parts",["автозапчаст","автокомпонент","автомобильн комплектующ"],["45.3","29.3"],"auto",["запчаст","комплектующ"],"«запчасти» и «комплектующие» без указания на автомобили бывают и для станков, и для самолётов — отрасль не задают"),
 ("road_freight_logistics",["грузоперевоз","автоперевоз","грузовой транспорт","логистик"],["49.4","52.1","52.24","52.29","53"],"transport_logistics",["перевозк"],"«перевозки» без уточнения могут быть пассажирскими"),
 ("rail",["железнодорож","ж/д перевоз","грузовые вагон"],["49.1","49.2"],"transport_logistics",[],None),
 ("shipping",["морск","судоходств","порт","контейнерн"],["50","52.22"],"transport_logistics",["порт"],"«порт» встречается в составных словах (импорт, экспорт): матчить только как отдельное слово"),
@@ -50,7 +51,7 @@ for i,terms,prefs,rule,amb,note in E:
     pp=[]
     for p in prefs:
         assert okved_levels(p), p
-        m=c[c.lv.map(lambda l:p in l)]
+        m=c[c.lv.map(lambda l, p=p:p in l)]
         if len(m):
             ex=m.iloc[0]; pp.append({"prefix":p,"verified":"data","example_okved":f"{ex.MAINOKVED_CODE} {ex.MAINOKVED_NAME}","companies_in_data":int(cnt[m.MAINOKVED_CODE].sum())})
         else:

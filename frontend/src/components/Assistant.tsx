@@ -7,14 +7,14 @@ import type { SourceRef } from './Source'
 export function AnswerView({ a, onSource }: { a: J; onSource: (s: SourceRef) => void }) {
   return (
     <div className="assistant-answer">
-      <div><OriginChip origin={a.origin === 'rule' ? 'rule' : a.origin} /></div>
+      <div><OriginChip origin={a.origin} method={a.method} /></div>
       <p>{a.answer}</p>
       {(a.blocks ?? []).map((b: J, i: number) => {
         if (b.type === 'table') return (
           <div className="tbl-wrap" key={i}><table className="tbl"><thead><tr>{b.columns.map((c: string) => <th key={c}>{c}</th>)}</tr></thead>
             <tbody>{b.rows.map((r: string[], j: number) => <tr key={j}>{r.map((c, k) => <td key={k}>{c}</td>)}</tr>)}</tbody></table></div>)
         if (b.type === 'list') return <ul key={i} style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.5 }}>{b.items.map((x: string) => <li key={x}>{x}</li>)}</ul>
-        if (b.type === 'finding') return <div className="block risk" key={i}><h4>{b.title}</h4><p>{b.text}</p>{b.hypothesis && <span className="chip warn">гипотеза</span>}</div>
+        if (b.type === 'finding') return <div className={`block ${b.direction === 'opportunity' ? 'opportunity' : b.direction === 'risk' ? 'risk' : 'neutral'}`} key={i}><h4>{b.title}</h4><p>{b.text}</p>{b.hypothesis && <span className="chip warn">гипотеза</span>}</div>
         if (b.type === 'quote') return <div key={i}><OriginChip origin={b.origin} /><blockquote className="quote">{b.text}<br /><small>{b.source}</small></blockquote></div>
         return null
       })}
@@ -27,19 +27,23 @@ export function AnswerView({ a, onSource }: { a: J; onSource: (s: SourceRef) => 
 
 export function Ask({ company, role, itemId, chips, onSource }: { company: string; role: string; itemId?: string; chips: string[]; onSource: (s: SourceRef) => void }) {
   const [q, setQ] = useState('')
+  const [asked, setAsked] = useState('')
   const [ans, setAns] = useState<J>(null)
   const [busy, setBusy] = useState(false)
   const go = async (text: string) => {
-    if (!text.trim()) return
-    setQ(text); setBusy(true)
-    try { setAns(await api.ask(company, role, text, itemId)) } catch (e: any) { setAns({ answer: e.message, origin: 'rule', blocks: [] }) } finally { setBusy(false) }
+    const question = text.trim()
+    if (!question || busy) return
+    setAsked(question); setQ(''); setAns(null); setBusy(true)     // поле очищается: вопрос показан над ответом
+    try { setAns(await api.ask(company, role, question, itemId)) } catch (e: any) { setAns({ answer: e.message, origin: 'rule', blocks: [] }) } finally { setBusy(false) }
   }
   return (
     <>
       <div className="q-chips">{chips.map((c) => <button key={c} onClick={() => go(c)}>{c}</button>)}</div>
-      {ans && <AnswerView a={ans} onSource={onSource} />}
+      {asked && <div className="asked"><span>Вы спросили</span>{asked}</div>}
+      {busy && <div className="assistant-answer"><p>Ищу ответ в данных компании и материалах банка…</p></div>}
+      {ans && !busy && <AnswerView a={ans} onSource={onSource} />}
       <div className="ask-box"><input value={q} placeholder="Задайте свой вопрос" aria-label="Вопрос" onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go(q)} />
-        <button aria-label="Отправить" disabled={busy} onClick={() => go(q)}><Icon name="send" size={18} /></button></div>
+        <button aria-label="Отправить" disabled={busy || !q.trim()} onClick={() => go(q)}><Icon name="send" size={18} /></button></div>
     </>
   )
 }

@@ -15,5 +15,7 @@ COPY data/bank_analytics ./data/bank_analytics
 RUN useradd --system --uid 10001 app && mkdir -p /app/data && chown -R app /app
 USER app
 EXPOSE 8002
-ENV NEWS_DB_URL=sqlite:////app/data/news_ingest.db NEWS_BOOTSTRAP_BANK=1 NEWS_STANDALONE_AUTH=demo
+# Авторизация по умолчанию — Bearer-токены (NEWS_API_TOKENS, см. services/news_ingest/auth_shim.py): без токенов API не стартует.
+# NEWS_STANDALONE_AUTH=demo (любой X-User-ID) — только для локальной разработки, не для опубликованного порта.
+ENV NEWS_DB_URL=sqlite:////app/data/news_ingest.db NEWS_BOOTSTRAP_BANK=1 NEWS_STANDALONE_AUTH=token NEWS_INGEST_OPEN=0
 CMD ["uvicorn", "services.news_ingest.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8002"]

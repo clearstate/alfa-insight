@@ -40,10 +40,20 @@ if errorlevel 1 %PY% -m ensurepip --upgrade
 %PY% -m pip install --disable-pip-version-check -r requirements.lock.txt
 if errorlevel 1 goto :piperror
 
-rem ---- 3. free port ----
+rem ---- 3. port: stop an old Alfa Insight (python) still running on 8080, otherwise use 8090 ----
 set "PORT=8080"
-netstat -ano -p tcp | findstr ":8080 " | findstr "LISTENING" >nul 2>&1
-if not errorlevel 1 set "PORT=8090"
+set "OLDPID="
+for /f "tokens=5" %%p in ('netstat -ano -p tcp ^| findstr ":8080 " ^| findstr "LISTENING"') do set "OLDPID=%%p"
+if defined OLDPID (
+  tasklist /FI "PID eq %OLDPID%" /NH | findstr /I "python py.exe" >nul 2>&1
+  if not errorlevel 1 (
+    echo An old server is still running on port 8080 - stopping it so the new version is shown.
+    taskkill /PID %OLDPID% /F >nul 2>&1
+    timeout /t 2 /nobreak >nul
+  ) else (
+    set "PORT=8090"
+  )
+)
 
 rem ---- 4. run ----
 echo.
@@ -51,6 +61,7 @@ echo ==================================================================
 echo   Alfa Insight:  http://localhost:%PORT%/
 echo   Login: demo    Password: demo
 echo   The browser opens in about 15 seconds. Stop the server: Ctrl+C
+echo   If the page looks old, press Ctrl+F5 in the browser.
 echo ==================================================================
 echo.
 start "" powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 15; Start-Process 'http://localhost:%PORT%/'"

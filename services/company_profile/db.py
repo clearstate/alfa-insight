@@ -360,10 +360,6 @@ class SqlStore:
         rows = self._rows("etl_runs", f"WHERE status = {p}", ("success",), "ORDER BY finished_at DESC")
         return rows[0] if rows else None
 
-    def get_run(self, run_id: str) -> dict | None:
-        rows = self._rows("etl_runs", f"WHERE run_id = {self.dialect.param}", (run_id,))
-        return rows[0] if rows else None
-
     # --- данные ---------------------------------------------------------------
     def save_clean_data(self, cur, clean: CleanData) -> dict[str, int]:
         for name in DATA_TABLES:

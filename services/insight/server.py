@@ -25,11 +25,18 @@ from urllib.parse import parse_qs, unquote, urlparse
 from services.company_profile.access import AccessDenied, UserNotFound
 from services.company_profile.service import CompanyNotFound, CompanyQuarantined
 
+from . import APP_VERSION
+from .agent import ItemNotFound
 from .service import InsightService
-from .settings import load_settings
+from .settings import load_dotenv, load_settings
 
 log = logging.getLogger("insight.server")
-MAX_BODY = 64 * 1024
+MAX_BODY = 256 * 1024       # новость до 20 000 символов проходит и при экранировании \uXXXX в JSON (×6)
+# Явные MIME-типы: на Windows mimetypes берёт их из реестра, где .js/.css бывают text/plain —
+# при заголовке nosniff браузер тогда не выполнит скрипт и страница окажется пустой.
+MIME = {".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
+        ".svg": "image/svg+xml", ".json": "application/json; charset=utf-8", ".png": "image/png", ".ico": "image/x-icon",
+        ".pdf": "application/pdf", ".woff2": "font/woff2", ".map": "application/json"}
 
 
 class ApiError(Exception):
@@ -74,14 +81,24 @@ class App:
             q.append(now)
 
     # ---- маршрутизация
-    def handle(self, method: str, path: str, query: dict, body: dict, headers) -> tuple[int, object]:
+    def handle(self, method: str, path: str, query: dict, body: dict, headers, client: str = "") -> tuple[int, object]:
         s = self.svc
+
+        def b_str(k: str, d: str = "") -> str:
+            v = body.get(k, d)
+            return v if isinstance(v, str) else d if v is None else str(v)
+
+        def b_opt(k: str) -> str | None:
+            v = body.get(k)
+            return v if isinstance(v, str) and v else None
+
         if path == "/api/health":
             return 200, s.health()
         if path == "/api/auth/accounts":
             return 200, {"accounts": s.dir.demo_accounts(), "password_hint": "Пароль всех демо-учётных записей — demo"}
         if path == "/api/auth/login" and method == "POST":
-            u = s.dir.authenticate(str(body.get("login", "")).strip(), str(body.get("password", "")))
+            self.rate_limit("login:" + client, limit=20)        # подбор пароля: не более 20 попыток в минуту с адреса
+            u = s.dir.authenticate(b_str("login").strip(), b_str("password"))
             if not u:
                 s.journal.audit(None, "login_failed")
                 raise ApiError(401, "bad_credentials", "Неверный логин или пароль")
@@ -96,46 +113,61 @@ class App:
         self.rate_limit(user.user_id)
         q = lambda k, d=None: (query.get(k) or [d])[0]  # noqa: E731
         role = q("role")
+        if method == "POST":
+            role = b_opt("role") or role
+
+        def q_int(k: str, d: int | None = None) -> int | None:
+            v = q(k)
+            if v is None:
+                return d
+            if not v.isdigit():
+                raise ApiError(422, "bad_request", f"{k}: ожидается целое число")
+            return int(v)
+
         if path == "/api/me":
             return 200, self._user(user)
         if path == "/api/feed":
-            return 200, s.feed(user, q("company", ""), role, q("tab", "all"), int(q("limit", 14)))
+            return 200, s.feed(user, q("company", ""), role, q("tab", "all"), min(q_int("limit", 14), 100))
         if path == "/api/context":
             return 200, s.context(user, q("company", ""), role)
+        if path == "/api/insights/hide" and method == "POST":
+            return 200, s.hide(user, b_str("company"), role, b_str("item_id"), body.get("hidden", True) is not False)
         m = re.fullmatch(r"/api/insights/([\w:.-]+)", path)
         if m:
-            return 200, s.insight(user, q("company", ""), role, m.group(1))
+            return 200, s.insight(user, q("company", ""), role, m.group(1), q("mode", "auto"))
         if path == "/api/ask" and method == "POST":
-            return 200, s.ask(user, str(body.get("company", "")), body.get("role"), str(body.get("question", "")), body.get("item_id"))
+            return 200, s.ask(user, b_str("company"), role, b_str("question"), b_opt("item_id"))
         if path == "/api/feedback" and method == "POST":
-            s.check(user, str(body.get("company", "")), body.get("role"))
+            s.check(user, b_str("company"), role)
             rating = body.get("rating")
             if rating not in ("up", "down"):
                 raise ApiError(422, "bad_request", "rating: up|down")
-            rec = s.journal.write("feedback", {"user": user.user_id, "company": body.get("company"), "item": body.get("item_id"), "rating": rating,
-                                               "reason": str(body.get("reason", ""))[:40], "comment": str(body.get("comment", ""))[:500]})
+            rec = s.journal.write("feedback", {"user": user.user_id, "company": b_str("company"), "item": b_opt("item_id"), "rating": rating,
+                                               "reason": b_str("reason")[:40], "comment": b_str("comment")[:500]})
             return 200, {"ok": True, "recorded": rec["ts"]}
         if path == "/api/actions" and method == "POST":
-            s.check(user, str(body.get("company", "")), body.get("role"))
+            s.check(user, b_str("company"), role)
             typ = body.get("type")
             if typ not in ("manager", "request", "callback"):
                 raise ApiError(422, "bad_request", "type: manager|request|callback")
-            rec = s.journal.write("actions", {"user": user.user_id, "company": body.get("company"), "item": body.get("item_id"), "type": typ, "note": str(body.get("note", ""))[:500]})
+            rec = s.journal.write("actions", {"user": user.user_id, "company": b_str("company"), "item": b_opt("item_id"), "type": typ, "note": b_str("note")[:500]})
             return 200, {"ok": True, "ticket": "DEMO-" + hashlib.sha1(rec["ts"].encode()).hexdigest()[:6].upper(), "message": {
                 "manager": "Менеджер свяжется с вами (демо: заявка записана в журнал).", "request": "Заявка зарегистрирована (демо).", "callback": "Обратный звонок заказан (демо)."}[typ]}
+        if path == "/api/company/payments":
+            return 200, s.payments(user, q("company", ""))
         if path == "/api/analytics/macro":
             return 200, s.macro()
         if path == "/api/calendar":
             return 200, {"events": s.kb.calendar()}
         m = re.fullmatch(r"/api/sources/([\w:.-]+)", path)
         if m:
-            d = s.source(m.group(1), int(q("page")) if q("page") else None)
+            d = s.source(m.group(1), q_int("page"))
             if not d:
                 raise ApiError(404, "not_found", "Источник не найден")
             return 200, d
         if path == "/api/news/ingest" and method == "POST":
             try:
-                return 200, s.ingest(user, str(body.get("text", "")), body.get("title"))
+                return 200, s.ingest(user, b_str("text"), b_opt("title"))
             except ValueError as exc:
                 raise ApiError(422, "bad_request", str(exc)) from exc
         if path == "/api/metrics":
@@ -152,6 +184,7 @@ def make_handler(app: App):
 
     class H(BaseHTTPRequestHandler):
         server_version = "AlfaInsight/1.0"
+        timeout = 30          # медленный или оборванный клиент не занимает поток сервера бесконечно
 
         def log_message(self, fmt, *args):  # noqa: A003
             log.info("%s %s", self.address_string(), fmt % args)
@@ -167,8 +200,11 @@ def make_handler(app: App):
                 self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
             for k, v in (extra or {}).items():
                 self.send_header(k, v)
-            self.end_headers()
-            self.wfile.write(data)
+            try:
+                self.end_headers()
+                self.wfile.write(data)
+            except ConnectionError:
+                pass           # клиент закрыл соединение до ответа (вкладка закрыта, обрыв сети) — отвечать некому
 
         def do_OPTIONS(self):  # noqa: N802
             self._send(204, b"")
@@ -187,14 +223,19 @@ def make_handler(app: App):
                 if path.startswith("/api/"):
                     body = {}
                     if method == "POST":
-                        n = int(self.headers.get("Content-Length") or 0)
+                        raw_len = self.headers.get("Content-Length") or "0"
+                        if not raw_len.isdigit():
+                            raise ApiError(400, "bad_request", "Некорректный Content-Length")
+                        n = int(raw_len)
                         if n > MAX_BODY:
                             raise ApiError(413, "too_large", "Слишком большой запрос")
                         try:
                             body = json.loads(self.rfile.read(n) or b"{}")
-                        except json.JSONDecodeError as exc:
+                        except (json.JSONDecodeError, UnicodeDecodeError, RecursionError) as exc:   # RecursionError — вложенность в тысячи уровней
                             raise ApiError(400, "bad_json", "Некорректный JSON") from exc
-                    status, payload = app.handle(method, path, parse_qs(u.query), body, self.headers)
+                        if not isinstance(body, dict):
+                            raise ApiError(400, "bad_json", "Ожидается JSON-объект")
+                    status, payload = app.handle(method, path, parse_qs(u.query), body, self.headers, self.client_address[0])
                     return self._send(status, payload, extra={"X-Correlation-ID": cid})
                 if path.startswith("/files/"):
                     return self._file(pdfs, path[len("/files/"):])
@@ -202,12 +243,14 @@ def make_handler(app: App):
             except ApiError as e:
                 self._send(e.status, {"error": {"code": e.code, "message": e.message, "correlation_id": cid}}, extra={"X-Correlation-ID": cid})
             except AccessDenied:
-                self._send(403, {"error": {"code": "forbidden", "message": "Нет доступа к этой компании", "correlation_id": cid}})
-            except (CompanyNotFound, CompanyQuarantined, KeyError, UserNotFound):
-                self._send(404, {"error": {"code": "not_found", "message": "Не найдено", "correlation_id": cid}})
+                self._send(403, {"error": {"code": "forbidden", "message": "Нет доступа к этой компании", "correlation_id": cid}}, extra={"X-Correlation-ID": cid})
+            except (CompanyNotFound, CompanyQuarantined, ItemNotFound, UserNotFound):
+                self._send(404, {"error": {"code": "not_found", "message": "Не найдено", "correlation_id": cid}}, extra={"X-Correlation-ID": cid})
+            except (ConnectionError, TimeoutError):
+                pass           # клиент закрыл соединение или не дослал тело запроса
             except Exception:  # noqa: BLE001
                 log.exception("ошибка обработки %s %s [%s]", method, path, cid)
-                self._send(500, {"error": {"code": "internal", "message": "Внутренняя ошибка", "correlation_id": cid}})
+                self._send(500, {"error": {"code": "internal", "message": "Внутренняя ошибка", "correlation_id": cid}}, extra={"X-Correlation-ID": cid})
 
         def _file(self, root: Path, rel: str):
             """Отдаёт PDF материалов банка потоково (файлы до десятков МБ не читаются в память целиком)."""
@@ -215,7 +258,7 @@ def make_handler(app: App):
             if not str(p).startswith(str(root.resolve()) + os.sep) or not p.is_file():
                 return self._send(404, {"error": {"code": "not_found", "message": "Файл не найден"}})
             self.send_response(200)
-            self.send_header("Content-Type", mimetypes.guess_type(str(p))[0] or "application/octet-stream")
+            self.send_header("Content-Type", MIME.get(p.suffix.lower()) or mimetypes.guess_type(str(p))[0] or "application/octet-stream")
             self.send_header("Content-Length", str(p.stat().st_size))
             self.send_header("Content-Disposition", "inline")
             self.send_header("Cache-Control", "public, max-age=3600")
@@ -224,7 +267,7 @@ def make_handler(app: App):
             try:
                 with p.open("rb") as fh:
                     shutil.copyfileobj(fh, self.wfile, 256 * 1024)
-            except (BrokenPipeError, ConnectionResetError):
+            except ConnectionError:
                 pass           # клиент закрыл вкладку — нормальная ситуация для просмотрщика PDF
 
         def _static(self, path: str):
@@ -232,18 +275,18 @@ def make_handler(app: App):
                 return self._send(200, "<h1>Alfa Insight API</h1><p>Интерфейс не собран: см. README (frontend).</p>".encode(), "text/html; charset=utf-8")
             rel = path.lstrip("/") or "index.html"
             p = (static / rel).resolve()
-            if not str(p).startswith(str(static.resolve())) or not p.is_file():
+            if not str(p).startswith(str(static.resolve()) + os.sep) or not p.is_file():
                 p = static / "index.html"        # SPA
-            ctype = mimetypes.guess_type(str(p))[0] or "text/html"
-            if ctype.startswith("text/") or ctype in ("application/javascript", "application/json"):
-                ctype += "; charset=utf-8"
-            self._send(200, p.read_bytes(), ctype, {"Cache-Control": "no-cache"})
+            ctype = MIME.get(p.suffix.lower()) or mimetypes.guess_type(str(p))[0] or "application/octet-stream"
+            # index.html — всегда свежий; ассеты сборки (assets/, хеш в имени) — кешируются надолго (старый интерфейс не «залипает»)
+            cache = "no-store" if p.name == "index.html" else ("public, max-age=31536000, immutable" if p.parent.name == "assets" else "no-cache")
+            self._send(200, p.read_bytes(), ctype, {"Cache-Control": cache})
 
     return H
 
 
 OPENAPI = {
-    "openapi": "3.0.3", "info": {"title": "Alfa Insight API", "version": "1.0.0", "description": "Персонализированная новостная аналитика для крупного бизнеса. Демо-вход: POST /api/auth/login (пароль demo)."},
+    "openapi": "3.0.3", "info": {"title": "Alfa Insight API", "version": APP_VERSION, "description": "Персонализированная новостная аналитика для крупного бизнеса. Демо-вход: POST /api/auth/login (пароль demo)."},
     "paths": {
         "/api/auth/login": {"post": {"summary": "Вход (демо)", "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"login": {"type": "string"}, "password": {"type": "string"}}}}}}}},
         "/api/me": {"get": {"summary": "Пользователь, его компании и роли"}},
@@ -252,7 +295,9 @@ OPENAPI = {
         "/api/insights/{item_id}": {"get": {"summary": "Полный инсайт: что произошло, почему важно, последствия, позиция банка, действия, источники, проверки, трассировка"}},
         "/api/ask": {"post": {"summary": "Уточняющий вопрос по инсайту или компании"}},
         "/api/feedback": {"post": {"summary": "Обратная связь (up|down)"}},
+        "/api/insights/hide": {"post": {"summary": "Скрыть инсайт из ленты пользователя по компании ({company, item_id, hidden: true|false}); скрывается событие целиком (кластер публикаций)"}},
         "/api/actions": {"post": {"summary": "Действие: manager | request | callback"}},
+        "/api/company/payments": {"get": {"summary": "Платёжные потоки и продукты компании (данные кейса)"}},
         "/api/analytics/macro": {"get": {"summary": "Прогнозы банка с версиями и заменёнными значениями"}},
         "/api/calendar": {"get": {"summary": "Ближайшие события из материалов банка"}},
         "/api/sources/{item_id}": {"get": {"summary": "Первоисточник: текст страницы/материала"}},
@@ -264,11 +309,19 @@ OPENAPI = {
 
 
 def serve() -> None:
+    loaded = load_dotenv()
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    if loaded:
+        log.info("из .env загружено переменных: %s", len(loaded))      # имена и значения не логируем: там секреты
     s = load_settings()
     svc = InsightService(s)
     app = App(svc)
-    httpd = ThreadingHTTPServer((s.host, s.port), make_handler(app))
+    try:
+        httpd = ThreadingHTTPServer((s.host, s.port), make_handler(app))
+    except OSError as exc:
+        log.error("Порт %s занят или недоступен (%s). Задайте другой: переменная PORT, например PORT=8090.", s.port, exc)
+        raise SystemExit(1) from exc
+    print(f"\n  Alfa Insight запущен: http://localhost:{s.port}/   (логин demo, пароль demo)\n", flush=True)
     log.info("Alfa Insight: http://%s:%s (режим: %s, данные: %s)", s.host, s.port, "llm" if svc.llm.available else "правила", s.data_dir)
     try:
         httpd.serve_forever()

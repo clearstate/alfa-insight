@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from .textkit import ru_date, ru_num, short
+from .labels import basis_ru, factor_phrase
+from .textkit import ru_date, ru_date_short, ru_num, ru_value, short
 
 # origin — сквозная шкала происхождения вывода (критерии 3 и 12):
 #   fact          — факт из новости (подтверждённый)
@@ -66,10 +67,9 @@ class EvidenceBook:
                                  "page": ch.get("page"), "source_file": item.get("source_file"), "chunk_id": ch["id"]})
 
     def indicator(self, ind: dict) -> str:
-        unit = ind.get("unit") or ""
-        text = f"{ind['label']}, {ind['period']}: {ru_num(ind['value'], 1, strip=False)} ({unit}) — прогноз банка от {ru_date(ind['published_at'])}, стр. {ind.get('page')}"
+        text = f"{ind['label']}, {ind['period']}: {ru_value(ind['value'], ind.get('unit'))} — прогноз банка от {ru_date(ind['published_at'])}, стр. {ind.get('page')}"
         if ind.get("superseded"):
-            old = ", ".join(f"{ru_num(s['value'], 2, strip=True)} ({ru_date(s['published_at'])[:-6]})" for s in ind["superseded"][:3])
+            old = ", ".join(f"{ru_num(s['value'], 2, strip=True)} ({ru_date_short(s['published_at'])})" for s in ind["superseded"][:3])
             text += f". Предыдущие значения: {old} — заменены более поздним документом"
         return self._add(f"ind:{ind['indicator']}:{ind['period']}", kind="indicator", origin="bank_view", label="Прогноз Альфа-Банка · " + (ind.get("doc_title") or ""),
                          text=text, numbers=[ind["value"]] + [s["value"] for s in ind.get("superseded", [])],
@@ -80,12 +80,19 @@ class EvidenceBook:
         based = factor.get("based_on") or []
         origin = "rule"
         return self._add(f"company:{code}", kind="company", origin=origin,
-                         label=f"Признак компании · {code} ({factor['level']})", text=short(factor.get("rationale") or "", 380), numbers=None,
+                         label=f"Признак компании · {factor_phrase(code, factor['level'])}", text=short(factor.get("rationale") or "", 380),
+                         numbers=None,
                          source={"rule_id": factor.get("rule_id"), "level": factor["level"], "confidence": factor.get("confidence"),
+                                 "basis": basis_ru(based[:6]),          # для интерфейса; коды полей — в based_on
                                  "based_on": [f"{b.get('source_file')}:{b.get('source_row_id')}:{b.get('source_field')}={b.get('value')}" for b in based[:6]]})
 
     def company_fact(self, key: str, text: str, src: dict) -> str:
         return self._add(f"cf:{key}", kind="company", origin="company_data", label="Данные о компании", text=text, numbers=None, source=src)
+
+    def role_fact(self, role: str, text: str) -> str:
+        """Настройка роли пользователя (roles.yaml) — правило системы, а не данные о компании."""
+        return self._add(f"role:{role}", kind="role", origin="rule", label="Приоритеты роли", text=text, numbers=None,
+                         source={"config": "roles.yaml", "role": role})
 
     def calc(self, key: str, text: str, numbers: list[float]) -> str:
         return self._add(f"calc:{key}", kind="calc", origin="rule", label="Расчёт системы", text=text, numbers=numbers, source={"method": "deterministic_formula"})

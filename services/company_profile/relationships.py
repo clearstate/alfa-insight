@@ -2,7 +2,7 @@
 
 Типы связей: same_group, shared_person, payment_in, payment_out.
 Ни один тип сам по себе не означает контроль, аффилированность или общего собственника.
-Платежи без дат — только суммарные значения за неизвестный период, без временных агрегатов.
+Платежи без дат — суммарные значения с 1 января (вебинар, вопрос 20), без временных агрегатов.
 """
 
 from __future__ import annotations
@@ -72,9 +72,6 @@ class RelationshipIndex:
                 if other != company_id:
                     counts[other] += 1
         return dict(counts)
-
-    def persons_count(self, company_id: str) -> int:
-        return len(self.company_persons.get(company_id, []))
 
     # --- платежи ------------------------------------------------------------
     def _edges(self, idx: np.ndarray | None, other: np.ndarray) -> list[PaymentEdge]:

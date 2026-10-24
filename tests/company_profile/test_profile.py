@@ -22,14 +22,16 @@ def test_full_profile():
     assert p["industry"]["okved_section"]["value"] == "G"
     assert p["industry"]["okved_levels"]["value"] == ["47", "47.1", "47.11"]
     assert p["size"]["revenue"]["value"] == 20_000_000_000.0
-    assert p["size"]["revenue_unit"]["claim_type"] == "unknown"
+    assert (p["size"]["revenue_unit"]["value"], p["size"]["revenue_period"]["value"]) == ("RUB", "2025")  # вебинар, вопрос 14
     assert p["size"]["is_large_business"]["value"] is True
     assert p["size"]["is_large_business"]["claim_type"] == "inference"
+    assert p["size"]["is_large_business"]["confidence"] == "high"          # по выручке самого юрлица
     assert p["foreign_trade"]["countries"]["value"] == ["КИТАЙ", "ТУРЦИЯ"]
     assert p["foreign_trade"]["direction"]["claim_type"] == "unknown"
     assert p["bank_relationship"]["products"]["loans"]["value"] is True
     assert "restricted" not in p and "NEGATIVEMARK" not in json.dumps(p)  # минимизация
-    assert {g["code"] for g in p["data_gaps"]} >= {"revenue_unit_unknown", "no_dates"}
+    assert "no_dates" in {g["code"] for g in p["data_gaps"]}
+    assert "revenue_unit_unknown" not in {g["code"] for g in p["data_gaps"]}
     json.dumps(p, ensure_ascii=False)  # сериализуемо
 
 
@@ -49,7 +51,9 @@ def test_missing_revenue():
     p = service().build_profile("U_T2")
     rev = p["size"]["revenue"]
     assert rev["value"] is None and rev["claim_type"] == "unknown" and rev["source_field"] == "REVENUE_COMPANY"
-    assert p["size"]["is_large_business"]["claim_type"] == "unknown"
+    # своя выручка неизвестна, но группа group_1_sb (U_T1, 20 млрд) — крупный бизнес: сегмент по группе (вопрос 16)
+    large = p["size"]["is_large_business"]
+    assert (large["value"], large["confidence"]) == (True, "medium") and "группы" in large["method"]
     codes = {g["code"] for g in p["data_gaps"]}
     assert {"revenue_missing", "eco_stage_missing", "product_meaning_unconfirmed"} <= codes
 
@@ -159,3 +163,37 @@ def test_prompt_view_is_minimized():
 def test_profile_is_cached_and_deterministic():
     svc = service()
     assert svc.build_profile("U_T3") is svc.build_profile("U_T3")
+
+
+def test_revenue_placeholder_and_group_segment():
+    """Вебинар: выручка 1000 — заглушка (вопрос 15); крупный бизнес — по выручке группы (вопрос 16)."""
+    import tempfile
+    from pathlib import Path
+
+    from services.company_profile.features import load_rules
+    from services.company_profile.loader import load_raw
+    from services.company_profile.service import ProfileService
+    from services.company_profile.validation import validate
+
+    from .synthetic import company, write_dataset
+    rows = [company("U_P1", revenue="1000.0", group="group_p_sb"),               # заглушка, единственный в группе
+            company("U_G1", revenue="9000000000.0", group="group_g_sb"),          # 9 + 7 млрд = 16 млрд по группе
+            company("U_G2", revenue="7000000000.0", group="group_g_sb"),
+            company("U_G3", revenue="1000.0", group="group_g_sb"),               # заглушка не входит в сумму
+            company("U_S1", revenue="14000000000.0", group="group_s_sb")]        # одна, ниже порога
+    data = validate(load_raw(write_dataset(Path(tempfile.mkdtemp(prefix="cp_rev_")), companies=rows, persons=[], payments=[])))
+    svc = ProfileService(data, load_rules(), None)
+    p1 = svc.build_profile("U_P1")
+    assert p1["size"]["revenue"]["value"] is None
+    assert p1["size"]["is_large_business"]["claim_type"] == "unknown"
+    assert "revenue_missing" in {g["code"] for g in p1["data_gaps"]}
+    assert "revenue_placeholder" in {i.code for i in data.company_issues["U_P1"]}
+    g1 = svc.build_profile("U_G1")
+    assert g1["group"]["group_revenue_sum"]["value"] == 16_000_000_000.0
+    assert (g1["size"]["is_large_business"]["value"], g1["size"]["is_large_business"]["confidence"]) == (True, "medium")
+    assert svc.build_profile("U_G3")["size"]["is_large_business"]["value"] is True
+    assert svc.build_profile("U_S1")["size"]["is_large_business"]["value"] is False
+    assert svc.company_summary("U_G2")["is_large_business"] is True
+    from services.company_profile.etl import profile_scope
+    assert profile_scope(svc, "large", []) == ["U_G1", "U_G2", "U_G3"]
+

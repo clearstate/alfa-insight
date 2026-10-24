@@ -7,13 +7,20 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any
 
-from .textkit import clamp, exp_decay
+from .labels import profile_source_ru
+from services.company_profile.features import country_title
 
-WEIGHTS = {"topic": 0.34, "industry": 0.32, "supply_chain": 0.08, "region": 0.06, "country": 0.05, "role": 0.16, "group": 0.04, "bank_doc": 0.08}
+from .textkit import clamp, exp_decay, plural, ru_num, topics_ru
+
+# вес роли 0,28: смена роли заметно меняет ленту (у главного бухгалтера наверху налоги и зарплаты, у финдиректора — ставка),
+# но профиль компании по-прежнему главный; новости, набравшие баллы только за счёт роли, отсекает feed_worthy (нет вывода для компании)
+WEIGHTS = {"topic": 0.34, "industry": 0.32, "supply_chain": 0.08, "region": 0.06, "country": 0.05, "role": 0.28, "group": 0.04, "bank_doc": 0.08}
 TRADE_TOPICS = {"foreign_trade", "fx_rates", "sanctions", "logistics", "export", "import_substitution"}
 GENERIC_COUNTRIES = {"США"}  # упоминание без торговой связи — не считаем совпадением
+SUPPLY_MIN_SHARE = 0.10      # доля известных платежей контрагентов отрасли, с которой связь через цепочку поставок учитывается
+# темы, которые касаются любой компании независимо от профиля: изменения налогов и налоговой отчётности
+UNIVERSAL_TOPICS = {"taxes": 0.6}
 
 
 @dataclass
@@ -54,6 +61,7 @@ class Score:
 class Ranker:
     def __init__(self, directory, kb):
         self.dir, self.kb = directory, kb
+        self._okved: dict[str, str | None] = {}     # ОКВЭД участников групп: score вызывается для каждого материала ленты
 
     def score(self, item: dict, profile: dict, role_info: dict) -> Score:
         comps: list[Component] = []
@@ -66,7 +74,8 @@ class Ranker:
         # 1) темы: пересечение тем материала и профиля, вес = вес темы в профиле × (смесь относительной и абсолютной силы темы в материале)
         total, hit = 0.0, []
         for t, s in ns.items():
-            pt = prof_topics.get(t)
+            pt = prof_topics.get(t) or ({"topic": t, "weight": UNIVERSAL_TOPICS[t], "sources": [{"source": "universal:" + t}]}
+                                        if t in UNIVERSAL_TOPICS else None)
             if not pt:
                 continue
             strength = 0.6 * (s / mx if mx else 0) + 0.4 * s
@@ -76,7 +85,8 @@ class Ranker:
         if hit:
             hit.sort(key=lambda x: -x[1]["weight"])
             top = hit[:3]
-            detail = "; ".join(f"{t} (вес {pt['weight']:.1f}: " + ", ".join(s["source"] for s in pt["sources"][:2]) + ")" for t, pt in top)
+            detail = "; ".join(f"{topics_ru([t])} (вес {ru_num(pt['weight'], 1)}: " + ", ".join(dict.fromkeys(profile_source_ru(s["source"]) for s in pt["sources"][:2])) + ")"
+                               for t, pt in top)
             srcs = sorted({s["source"] for _, pt in top for s in pt["sources"]})
             comps.append(Component("topic", "Темы материала совпали с признаками компании", topic_val, WEIGHTS["topic"], detail, srcs))
             for t, pt in top:
@@ -96,6 +106,7 @@ class Ranker:
 
         # 3) цепочка поставок (поставщики/покупатели по платежам)
         sc = self.dir.supply_matches(n_pref, profile) if not direct or len(n_pref) > len(direct) else []
+        sc = [m for m in sc if (m.get("share_of_known") or 0) >= SUPPLY_MIN_SHARE]
         if sc:
             best = sc[0]
             share = best.get("share_of_known") or 0
@@ -117,7 +128,7 @@ class Ranker:
         common = ctry & n_ctry
         if common and (set(ns) & TRADE_TOPICS):
             comps.append(Component("country", "Страны внешней торговли компании упомянуты в событии", clamp(0.5 + 0.25 * len(common)), WEIGHTS["country"],
-                                   "страны: " + ", ".join(sorted(common)), ["factor:fx_and_trade_exposure"]))
+                                   "страны: " + ", ".join(country_title(x) for x in sorted(common)), ["factor:fx_and_trade_exposure"]))
             feats.append({"kind": "country", "countries": sorted(common)})
 
         # 6) приоритеты роли пользователя
@@ -128,19 +139,19 @@ class Ranker:
                 rscore = max(rscore, (1.0 - 0.12 * pos) * (0.5 + 0.5 * (ns[t] / mx if mx else 0)))
         if rscore > 0:
             comps.append(Component("role", f"Приоритет роли «{role_info.get('title')}»", clamp(rscore), WEIGHTS["role"],
-                                   "приоритетные темы роли: " + ", ".join(t for t in prio if t in ns), ["role:" + role_info["code"]]))
+                                   "приоритетные темы роли: " + topics_ru(t for t in prio if t in ns), ["role:" + role_info["code"]]))
             feats.append({"kind": "role", "role": role_info["code"], "topics": [t for t in prio if t in ns]})
 
         # 7) группа компаний: событие, затрагивающее отрасль других участников группы (вопрос 25 вебинара)
         grp = self._group_overlap(profile, n_pref)
         if grp and not direct:
             comps.append(Component("group", "Событие касается другой компании группы", clamp(0.5 + 0.1 * grp["n"]), WEIGHTS["group"],
-                                   f"{grp['n']} компаний группы с ОКВЭД {', '.join(grp['okved'][:3])}", ["profile:group"]))
+                                   f"{grp['n']} {plural(grp['n'], ('компания', 'компании', 'компаний'))} группы с ОКВЭД {', '.join(grp['okved'][:3])}", ["profile:group"]))
             feats.append({"kind": "group", **grp})
 
         # 8) материал банка по теме — небольшой бонус: аналитика банка должна быть заметной частью ценности
         if item["kind"] == "bank" and comps:
-            comps.append(Component("bank_doc", "Аналитика банка по темам компании", 1.0, WEIGHTS["bank_doc"], "материал Центра макроэкономических исследований", ["bank:analytics"]))
+            comps.append(Component("bank_doc", "Аналитика банка по темам компании", 1.0, WEIGHTS["bank_doc"], "аналитический материал Альфа-Банка", ["bank:analytics"]))
 
         base = sum(c.contribution for c in comps)
         mult: dict[str, float] = {}
@@ -170,15 +181,19 @@ class Ranker:
         if not members or not prefixes or len(members) > 60:
             return None
         found = []
-        for m in members[:60]:
-            try:
-                c = self.dir.svc.company_summary(m)
-            except Exception:  # noqa: BLE001
-                continue
-            code = c.get("okved_code")
+        for m in members:
+            code = self._member_okved(m)
             if code and any(code.startswith(p) for p in prefixes):
                 found.append(code)
         return {"n": len(found), "okved": sorted(set(found))} if found else None
+
+    def _member_okved(self, company_id: str) -> str | None:
+        if company_id not in self._okved:
+            try:
+                self._okved[company_id] = self.dir.svc.company_summary(company_id).get("okved_code")
+            except Exception:  # noqa: BLE001 — участник группы вне данных/в карантине: просто не учитывается
+                self._okved[company_id] = None
+        return self._okved[company_id]
 
     # ------------------------------------------------------------------ лента
     def rank(self, profile: dict, role_info: dict, since_days: int | None = None) -> list[tuple[dict, Score]]:

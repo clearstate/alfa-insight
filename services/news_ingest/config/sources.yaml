@@ -1,8 +1,11 @@
-# Конфиг источников. ВАЖНО: из песочницы сети не было — адреса НЕ проверены. Перед включением (enabled: true)
-# команда запускает `python -m services.news_ingest.cli verify-sources` (robots.txt, доступность, формат) на машине с сетью
-# и вносит результат в verified_at/notes. Не включать источник без проверки условий использования.
+# Конфиг источников. Перед включением нового источника (enabled: true) запустить
+# `python -m services.news_ingest.cli verify-sources` (robots.txt, доступность, формат) на машине с сетью и внести результат
+# в verified_at/notes. Не включать источник без проверки условий использования.
+# Расписание (scheduler.py): ленты с enabled: true и method: rss обходятся каждые interval_min минут; источник считается
+# просроченным, если последний успешный прогон старше max_staleness_min (команда `cli freshness`, /api/news/health).
 version: 1
-defaults: {timeout_s: 10, max_bytes: 5000000, retries: 2, backoff_s: 1.0, min_interval_s: 2.0, user_agent: "AlfaInsightBot/0.1 (hackathon; contact: team)"}
+defaults: {timeout_s: 10, max_bytes: 5000000, retries: 2, backoff_s: 1.0, min_interval_s: 2.0, user_agent: "AlfaInsightBot/0.1 (hackathon; contact: team)",
+           interval_min: 30, max_staleness_min: 180}
 sources:
   - id: alfa_bank_analytics
     type: bank_analytics
@@ -18,9 +21,41 @@ sources:
     method: rss
     url: "https://www.cbr.ru/rss/RssPress"
     reliability: {score: 0.95, rule: "регулятор, первичный источник решений по ставке"}
-    enabled: false
-    verified_at: null
-    notes: "URL известен по публичной документации ЦБ, но НЕ проверен в этой среде (нет сети); проверить robots.txt/условия, формат ленты. Если недоступно — импорт файлом (cli import-file)."
+    enabled: true
+    verified_at: "2026-10-22 (verify-sources: robots.txt разрешает, HTTP 200, application/rss+xml, 13 записей; ingest-feed: импорт подтверждён)"
+    notes: "Описание записи — экранированный HTML пресс-релиза (очищается в rss.py); на страницах пресс-релизов нет машиночитаемой даты — дата берётся из pubDate ленты (feed_date_used). Если источник недоступен — импорт файлом (cli import-file)."
+  # Деловые СМИ: публичные RSS, robots.txt разрешает ленту и (где скачиваем) страницы статей — проверено 2026-10-23
+  # (scratch-проверка: лента, описания, даты, извлечение текста). Тексты принадлежат изданиям, показываются со ссылкой
+  # на первоисточник. Отклонены: Коммерсант, Lenta.ru, ПРАЙМ (robots.txt запрещает), Ведомости (в ленте нет описаний,
+  # страница — только анонс), RSS Минфина/Минэкономразвития (нет по известным адресам).
+  - id: interfax
+    type: media
+    name: "Интерфакс"
+    method: rss
+    url: "https://www.interfax.ru/rss.asp"
+    reliability: {score: 0.8, rule: "информационное агентство; факты — со ссылкой на источник публикации"}
+    enabled: true
+    verified_at: "2026-10-23 (robots.txt разрешает ленту и статьи; 25 записей с описаниями и датами; текст статей извлекается)"
+  - id: rbc
+    type: media
+    name: "РБК"
+    method: rss
+    url: "https://rssexport.rbc.ru/rbcnews/news/30/full.rss"
+    fetch_articles: false
+    reliability: {score: 0.75, rule: "деловое СМИ"}
+    enabled: true
+    verified_at: "2026-10-23 (robots.txt разрешает ленту; 30 записей; полный текст статьи в самой ленте — rbc_news:full-text)"
+    notes: "Страницы статей ботам отдаются как application/octet-stream — текст берётся из ленты (method rss_full)."
+  - id: tass
+    type: media
+    name: "ТАСС"
+    method: rss
+    url: "https://tass.ru/rss/v2.xml"
+    fetch_articles: false
+    reliability: {score: 0.8, rule: "государственное информационное агентство"}
+    enabled: true
+    verified_at: "2026-10-23 (robots.txt разрешает ленту; 100 записей, у 78 — описания, у всех — даты)"
+    notes: "Страницы статей отвечают ботам 403 — не скачиваются; материал сохраняется по описанию ленты (summary_only, needs_review)."
   - id: manual_file
     type: user_submitted
     name: "Ручной импорт файла/текста/URL (POST /api/news/ingest, cli import-file)"

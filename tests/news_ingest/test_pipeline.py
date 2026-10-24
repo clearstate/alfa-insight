@@ -23,6 +23,33 @@ def fetcher():
 
 
 class BankVertical(unittest.TestCase):
+    @unittest.skipUnless(len(list((ROOT / "data/bank_pdf").glob("*.pdf"))) == 9, "нет исходных PDF в data/bank_pdf")
+    def test_source_pdfs_match_sidecars_without_ocr(self):
+        """Все 9 исходных PDF (в т.ч. с кириллицей в имени) находят транскрипцию; результат совпадает с путём через сайдкары."""
+        st, p = make()
+        res = [p.ingest_bank_pdf(f, allow_ocr=False) for f in sorted((ROOT / "data/bank_pdf").glob("*.pdf"))]
+        self.assertEqual([r.outcome for r in res], ["created"] * 9, [r.error for r in res])
+        st2, p2 = make(); p2.ingest_bank_dir(ROOT / "data/bank_analytics")
+        self.assertEqual(st.stats(), st2.stats())
+        for r in res:
+            a, b = st.get_item(r.item_id), st2.get_item(r.item_id)
+            self.assertEqual(a["extraction"]["method"], "pdf_vision_sidecar")
+            self.assertEqual((a["content_hash"], a["published_at"], a["topics"]), (b["content_hash"], b["published_at"], b["topics"]))
+
+    def test_sidecar_found_by_hash_when_file_renamed(self):
+        import shutil
+        import tempfile
+        from services.news_ingest.bankdocs import read_pdf
+        pdf = next(f for f in (ROOT / "data/bank_pdf").glob("*.pdf") if f.name.startswith("Бонд")) if (ROOT / "data/bank_pdf").exists() else None
+        if pdf is None:
+            self.skipTest("нет исходного PDF")
+        with tempfile.TemporaryDirectory() as td:
+            shutil.copy(ROOT / "data/bank_analytics" / (pdf.stem + ".extract.json"),
+                        Path(td) / "#U0411#U043e#U043d#U0434_#U0411#U0440#U0438#U0444_14092026.extract.json")
+            ex = read_pdf(pdf, sidecar_dirs=[Path(td)], allow_ocr=False)
+        self.assertEqual(ex.method, "pdf_vision_sidecar")
+        self.assertTrue(ex.meta["sidecar"].startswith("#U0411"))
+
     def test_nine_documents_and_idempotency(self):
         st, p = make()
         r1 = p.ingest_bank_dir(ROOT / "data/bank_analytics")
@@ -209,11 +236,15 @@ class News(unittest.TestCase):
         r = self.ingest(p, "https://smi1.example/evil", "Новости погоды", evil)
         it = st.get_item(r.item_id)
         self.assertIn("prompt_injection_suspected", it["security_flags"])
+        self.assertEqual(seen, [])                                             # текст с инструкциями для AI модели не отдаётся
+        # обычный текст уходит модели только внутри <document> с пометкой «недоверенные данные»
+        clean = [evil[0], "Синоптики советуют учитывать порывы ветра при поездках на дальние расстояния в вечернее время.", evil[2]]
+        r2 = self.ingest(p, "https://smi1.example/weather", "Новости погоды", clean)
         user_msg = seen[0][1]["content"]
         self.assertTrue(user_msg.startswith("<document>") and user_msg.rstrip().endswith("</document>"))
         self.assertIn("НЕДОВЕРЕННЫЕ ДАННЫЕ", seen[0][0]["content"])
         from contracts.news_vocab import TOPICS_V1
-        self.assertTrue(set(it["topics"]) <= set(TOPICS_V1))                   # ответ модели не расширил словарь
+        self.assertTrue(set(st.get_item(r2.item_id)["topics"]) <= set(TOPICS_V1))   # ответ модели не расширил словарь
         self.assertEqual(len(seen), 1)
 
 
@@ -287,7 +318,7 @@ class Network(unittest.TestCase):
             s.routes.update({
                 "/feed": (200, {"Content-Type": "application/rss+xml"}, rss([
                     ("A", s.base + "/ok1", "Fri, 11 Sep 2026 12:00:00 +0300", "кратко"),
-                    ("B", s.base + "/dead", "Fri, 11 Sep 2026 12:05:00 +0300", "кратко"),
+                    ("B", s.base + "/dead", "Fri, 11 Sep 2026 12:05:00 +0300", ""),          # без описания -> резерва нет
                     ("C", s.base + "/ok2", "Fri, 11 Sep 2026 12:10:00 +0300", "кратко")])),
                 "/ok1": (200, {"Content-Type": "text/html; charset=utf-8"}, html("ЦБ сохранил ставку на уровне 14,0%", RATE_A)),
                 "/ok2": (200, {"Content-Type": "text/html; charset=utf-8"}, html("Золото подорожало", ["Цена золота выросла на 4% после объявления Минфина США о выкупе облигаций, сообщили аналитики драгоценных металлов рынка.",
@@ -296,6 +327,51 @@ class Network(unittest.TestCase):
             res = p.ingest_feed_bytes("manual_file", s.routes["/feed"][2], s.base + "/feed")
         self.assertEqual([r.outcome for r in res], ["created", "failed", "created"])
         self.assertEqual(st.errors()[0]["code"], "http_404")
+
+    def test_dead_article_saved_from_rss_summary_with_feed_date(self):
+        """Отказ статьи не теряет материал: сохраняется описание из ленты, дата и издатель — из ленты."""
+        with Server({}) as s:
+            s.routes.update({
+                "/feed": (200, {"Content-Type": "application/rss+xml"}, rss([
+                    ("Банк России сохранил ключевую ставку", s.base + "/dead", "Fri, 11 Sep 2026 12:05:00 +0300",
+                     RATE_A[0])])),
+                "/video": (200, {"Content-Type": "text/html; charset=utf-8"}, b"<html><body><video src='x.mp4'></video></body></html>"),
+            })
+            st, p = make(fetcher=fetcher())
+            res = p.ingest_feed_bytes("manual_file", s.routes["/feed"][2], s.base + "/feed")
+            res2 = p.ingest_feed_bytes("manual_file", rss([("Доходности ОФЗ выросли после заседания", s.base + "/video",
+                                                           "Fri, 11 Sep 2026 12:05:00 +0300", RATE_A[5])]), s.base + "/feed")
+        self.assertEqual(res[0].outcome, "created", res[0].error)
+        it = st.get_item(res[0].item_id)
+        self.assertEqual(it["title"], "Банк России сохранил ключевую ставку")
+        self.assertTrue(it["published_at"].startswith("2026-09-11"), it["published_at"])
+        self.assertIn("rss_fallback", it["status_reasons"]); self.assertIn("feed_date_used", it["status_reasons"])
+        self.assertIn("summary_only", it["status_reasons"]); self.assertEqual(it["processing_status"], "needs_review")
+        self.assertEqual(it["extraction"]["method"], "rss")
+        codes = [e["code"] for e in st.errors()]                          # журнал: новые записи первыми
+        self.assertIn("http_404", codes)                                  # причина отказа статьи зафиксирована
+        self.assertEqual(res2[0].outcome, "created")                     # видео-страница без текста -> резерв RSS
+        self.assertEqual(codes[0], "article_rejected")
+        it2 = st.get_item(res2[0].item_id)
+        self.assertEqual(it2["extraction"]["method"], "rss"); self.assertIn("feed_date_used", it2["status_reasons"])
+        self.assertTrue(it2["published_at"].startswith("2026-09-11"))
+
+    def test_article_without_date_borrows_feed_date(self):
+        """Дата есть в RSS, но не на странице: в базе дата не пустая."""
+        with Server({}) as s:
+            s.routes.update({
+                "/nd": (200, {"Content-Type": "text/html; charset=utf-8"}, html("ЦБ сохранил ставку", RATE_A, date=None)),
+            })
+            st, p = make(fetcher=fetcher())
+            res = p.ingest_feed_bytes("manual_file", rss([("ЦБ сохранил ставку на уровне 14,0%", s.base + "/nd",
+                                                           "Fri, 11 Sep 2026 15:30:00 +0300", "кратко")]), s.base + "/feed")
+        self.assertEqual(res[0].outcome, "created")
+        it = st.get_item(res[0].item_id)
+        self.assertEqual(it["published_at"], "2026-09-11T12:30:00+00:00")
+        self.assertNotIn("date_missing", it["status_reasons"])          # дата не потеряна
+        self.assertNotIn("summary_only", it["status_reasons"])          # текст — полный текст страницы, не аннотация
+        self.assertIn("feed_date_used", it["status_reasons"])
+        self.assertEqual(it["extraction"]["method"], "html")            # текст статьи сохранён, добавлена только дата
 
     def test_feed_summary_only_when_no_fetcher(self):
         st, p = make()
@@ -317,6 +393,155 @@ class Network(unittest.TestCase):
         self.assertEqual((a.outcome, b.outcome, b.item_id), ("created", "skipped", a.item_id))
         self.assertEqual(st.get_item(a.item_id)["source_type"], "user_submitted")
         self.assertLess(st.get_item(a.item_id)["source_reliability"]["score"], 0.5)
+
+
+class FeedFallback(unittest.TestCase):
+    """Резерв RSS: материал и дата публикации не теряются при недоступной/неполной странице статьи."""
+
+    def test_html_summary_is_cleaned(self):
+        """Описание ЦБ приходит экранированным HTML (теги, &nbsp;, комментарий, сноски) — в базу попадает чистый текст."""
+        desc = ("&lt;!-- TypographyUse --&gt;&lt;p&gt;Банк России отозвал лицензию у&amp;nbsp;НКО &amp;laquo;Тест&amp;raquo;. "
+                "По&amp;nbsp;величине активов она занимала 355&amp;nbsp;место&lt;sup&gt;1&lt;/sup&gt;.&lt;/p&gt;"
+                "&lt;p&gt;Второй абзац пресс-релиза о решении регулятора.&lt;/p&gt;")
+        st, p = make()
+        res = p.ingest_feed_bytes("manual_file", rss([("Отозвана лицензия у НКО «Тест»", "https://smi1.example/pr1",
+                                                       "Thu, 22 Oct 2026 04:51:00 +0300", desc)]), "https://smi1.example/feed")
+        self.assertEqual(res[0].outcome, "created", res[0].error)
+        it = st.get_item(res[0].item_id)
+        for junk in ("<", ">", "&nbsp", "&laquo", "TypographyUse", "место1"):
+            self.assertNotIn(junk, it["text"])
+        self.assertIn("«Тест»", it["text"]); self.assertIn("355 место.", it["text"])
+        self.assertIn("\n\nВторой абзац", it["text"])                    # абзацы сохранены
+        self.assertEqual(it["published_at"], "2026-10-22T01:51:00+00:00")
+
+    def test_atom_prefers_published_and_alternate_link(self):
+        from services.news_ingest.rss import parse_feed
+        body = ('<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><title>t</title><entry>'
+                '<title>Новость</title><link rel="enclosure" href="https://smi1.example/pic.jpg"/>'
+                '<link rel="alternate" href="https://smi1.example/news/1"/><updated>2026-10-22T10:00:00Z</updated>'
+                '<published>2026-10-21T09:00:00Z</published><summary type="html">&lt;b&gt;Кратко&lt;/b&gt;</summary></entry></feed>')
+        e = parse_feed(body.encode("utf-8"))[0]
+        self.assertEqual((e.link, e.published_raw, e.summary), ("https://smi1.example/news/1", "2026-10-21T09:00:00Z", "Кратко"))
+
+    def test_unparseable_page_date_falls_back_to_feed_date(self):
+        with Server({}) as s:
+            s.routes["/bd"] = (200, {"Content-Type": "text/html; charset=utf-8"}, html("ЦБ сохранил ставку", RATE_A, date="вчера"))
+            st, p = make(fetcher=fetcher())
+            res = p.ingest_feed_bytes("manual_file", rss([("ЦБ сохранил ставку", s.base + "/bd", "Fri, 11 Sep 2026 15:30:00 +0300",
+                                                           "кратко")]), s.base + "/feed")
+        it = st.get_item(res[0].item_id)
+        self.assertEqual(it["published_at"], "2026-09-11T12:30:00+00:00")
+        self.assertIn("feed_date_used", it["status_reasons"]); self.assertNotIn("date_missing", it["status_reasons"])
+
+    def test_page_date_wins_over_feed_date(self):
+        with Server({}) as s:
+            s.routes["/pd"] = (200, {"Content-Type": "text/html; charset=utf-8"}, html("ЦБ сохранил ставку", RATE_A))
+            st, p = make(fetcher=fetcher())
+            res = p.ingest_feed_bytes("manual_file", rss([("ЦБ сохранил ставку", s.base + "/pd", "Sat, 12 Sep 2026 10:00:00 +0300",
+                                                           "")]), s.base + "/feed")
+        it = st.get_item(res[0].item_id)
+        self.assertEqual(it["published_at"], "2026-09-11T12:30:00+00:00")
+        self.assertNotIn("feed_date_used", it["status_reasons"])
+
+    def test_dead_article_with_empty_description_saved_by_title(self):
+        """Лента без описаний (как у Lenta.ru) и отказ статьи: запись сохраняется по заголовку и ждёт проверки."""
+        with Server({}) as s:
+            st, p = make(fetcher=fetcher())
+            res = p.ingest_feed_bytes("manual_file", rss([
+                ("Лукашенко обратился к Белоусову", s.base + "/gone", "Thu, 22 Oct 2026 13:17:00 +0300", ""),
+                ("Коротко", s.base + "/gone2", "Thu, 22 Oct 2026 13:17:00 +0300", "")]), s.base + "/feed")
+        self.assertEqual([r.outcome for r in res], ["created", "failed"])
+        it = st.get_item(res[0].item_id)
+        self.assertEqual((it["text"], it["processing_status"]), ("Лукашенко обратился к Белоусову", "needs_review"))
+        self.assertTrue(it["extraction"]["title_only"]); self.assertIn("rss_fallback", it["status_reasons"])
+        self.assertEqual(it["published_at"], "2026-10-22T10:17:00+00:00")
+
+    def test_short_summary_is_combined_with_title(self):
+        st, p = make()
+        res = p.ingest_feed_bytes("manual_file", rss([("Минфин разместил ОФЗ на 50 млрд рублей", "https://smi1.example/o",
+                                                       "Wed, 21 Oct 2026 16:00:00 +0300", "Спрос превысил предложение.")]),
+                                  "https://smi1.example/feed")
+        it = st.get_item(res[0].item_id)
+        self.assertEqual(it["text"], "Минфин разместил ОФЗ на 50 млрд рублей\n\nСпрос превысил предложение.")
+
+    def test_fallback_upgraded_when_article_appears_and_never_downgraded(self):
+        """Сначала статья недоступна (резерв RSS), затем доступна (обновление до полного текста), затем снова
+        недоступна — полный текст не заменяется аннотацией."""
+        page = html("ЦБ сохранил ставку", RATE_A)
+        state = {"up": False}
+        with Server({}) as s:
+            s.routes["/a"] = lambda n: (200, {"Content-Type": "text/html; charset=utf-8"}, page) if state["up"] else (503, {}, b"down")
+            feed = rss([("ЦБ сохранил ставку", s.base + "/a", "Fri, 11 Sep 2026 15:30:00 +0300", RATE_A[0])])
+            st, p = make(fetcher=fetcher())
+            r1 = p.ingest_feed_bytes("manual_file", feed, s.base + "/feed")[0]
+            state["up"] = True
+            r2 = p.ingest_feed_bytes("manual_file", feed, s.base + "/feed")[0]
+            state["up"] = False
+            hits = s.hits.get("/a", 0)
+            r3 = p.ingest_feed_bytes("manual_file", feed, s.base + "/feed")[0]
+            self.assertEqual(s.hits.get("/a", 0), hits)                 # сохранённую статью повторно не скачиваем
+        self.assertEqual((r1.outcome, r1.status), ("created", "needs_review"))
+        self.assertEqual((r2.outcome, r2.item_id, r2.version, r2.status), ("updated", r1.item_id, 2, "ok"))
+        self.assertEqual((r3.outcome, r3.item_id), ("skipped", r1.item_id)); self.assertIn("already_ingested", r3.reasons)
+        it = st.get_item(r1.item_id)
+        self.assertEqual(it["extraction"]["method"], "html"); self.assertEqual(it["version"], 2)
+        self.assertNotIn("summary_only", it["status_reasons"])
+
+    def test_full_text_in_feed_is_used_without_fetching_page(self):
+        """РБК отдаёт полный текст в <rbc_news:full-text>: материал полноценный (rss_full, ok), страница не скачивается."""
+        full = " ".join(RATE_A)
+        body = ('<?xml version="1.0" encoding="utf-8"?><rss version="2.0" xmlns:rbc_news="https://www.rbc.ru"><channel><title>t</title>'
+                '<item><title>ЦБ сохранил ставку</title><link>{base}/art</link><pubDate>Fri, 11 Sep 2026 15:30:00 +0300</pubDate>'
+                '<description>Кратко о решении.</description><rbc_news:full-text><![CDATA[' + full + ']]></rbc_news:full-text>'
+                '</item></channel></rss>')
+        with Server({}) as s:
+            st, p = make(fetcher=fetcher())
+            res = p.ingest_feed_bytes("manual_file", body.replace("{base}", s.base).encode("utf-8"), s.base + "/feed")
+            self.assertEqual(s.hits.get("/art", 0), 0)
+        it = st.get_item(res[0].item_id)
+        self.assertEqual((it["extraction"]["method"], it["processing_status"], it["text"]), ("rss_full", "ok", full))
+        self.assertEqual(it["published_at"], "2026-09-11T12:30:00+00:00"); self.assertIn("feed_date_used", it["status_reasons"])
+
+    def test_source_with_fetch_articles_false_uses_summary(self):
+        with Server({}) as s:
+            s.routes["/feed"] = (200, {"Content-Type": "application/rss+xml"},
+                                 rss([("ЦБ сохранил ставку", s.base + "/blocked", "Fri, 11 Sep 2026 15:30:00 +0300", RATE_A[0])]))
+            st, p = make(fetcher=fetcher(), sources={
+                "agency": {"id": "agency", "type": "media", "name": "Агентство", "method": "rss", "url": s.base + "/feed",
+                           "enabled": True, "fetch_articles": False, "reliability": {"score": 0.8, "rule": "t"}}})
+            res = p.ingest_feed("agency")
+            self.assertEqual(s.hits.get("/blocked", 0), 0)                 # страницы источника не запрашиваются
+        it = st.get_item(res[0].item_id)
+        self.assertEqual((it["extraction"]["method"], it["publisher"], it["text"]), ("rss", "Агентство", RATE_A[0]))
+
+    def test_pdf_article_from_feed_is_saved_with_full_text(self):
+        """Ссылка из ленты ведёт на PDF с текстовым слоем: сохраняется текст документа, а не аннотация RSS."""
+        from tests.news_ingest.helpers import make_pdf
+        lines = ["Key rate decision: the Bank of Russia kept the key rate at 14.0 percent on 11 September 2026 meeting."] * 6
+        with Server({}) as s:
+            s.routes.update({"/doc.pdf": (200, {"Content-Type": "application/pdf"}, make_pdf(lines)),
+                             "/feed": (200, {"Content-Type": "application/rss+xml"},
+                                       rss([("Решение по ставке", s.base + "/doc.pdf", "Fri, 11 Sep 2026 15:30:00 +0300", "Кратко.")]))})
+            st, p = make(fetcher=fetcher(), sources={
+                "reg": {"id": "reg", "type": "regulator", "name": "Регулятор", "method": "rss", "url": s.base + "/feed",
+                        "enabled": True, "reliability": {"score": 0.9, "rule": "t"}}})
+            res = p.ingest_feed("reg")
+        it = st.get_item(res[0].item_id)
+        self.assertEqual((res[0].outcome, it["extraction"]["method"], it["publisher"]), ("created", "pdf_text", "Регулятор"))
+        self.assertIn("14.0 percent", it["text"]); self.assertNotIn("rss_fallback", it["status_reasons"])
+        self.assertEqual(it["published_at"], "2026-09-11T12:30:00+00:00")
+
+    def test_redirect_to_homepage_uses_rss_fallback(self):
+        home = html("Главная", ["Главные новости дня: " + "x" * 80, "Ещё одна новость на главной странице сайта " + "y" * 60])
+        with Server({}) as s:
+            s.routes.update({"/news/old": (301, {"Location": s.base + "/"}, b""),
+                             "/": (200, {"Content-Type": "text/html; charset=utf-8"}, home)})
+            st, p = make(fetcher=fetcher())
+            res = p.ingest_feed_bytes("manual_file", rss([("ЦБ сохранил ставку", s.base + "/news/old",
+                                                           "Fri, 11 Sep 2026 15:30:00 +0300", RATE_A[0])]), s.base + "/feed")
+        it = st.get_item(res[0].item_id)
+        self.assertEqual(it["extraction"]["method"], "rss"); self.assertEqual(it["text"], RATE_A[0])
+        self.assertIn("redirect_to_homepage", [e["code"] for e in st.errors()])
 
 
 class Store(unittest.TestCase):

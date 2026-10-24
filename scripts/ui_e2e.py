@@ -15,7 +15,7 @@ async def main():
         # смена пользователя через меню аватара
         await pg.click('.avatar-button'); await pg.wait_for_selector('.user-dropdown .dropdown-row')
         n=await pg.locator('.user-dropdown .dropdown-row').count(); step(f'user menu rows {n}')
-                await pg.click('.user-dropdown .dropdown-row >> text=Ирина Волкова'); await pg.wait_for_selector('.toast'); await pg.wait_for_timeout(1000)
+        await pg.click('.user-dropdown .dropdown-row >> text=Ирина Волкова'); await pg.wait_for_selector('.toast'); await pg.wait_for_timeout(1000)
         name=await pg.inner_text('.avatar-copy b'); step('now: '+name)
         assert 'Волкова' in name
         comps=await pg.locator('.select-button').inner_text(); step('company '+comps.split('\n')[0])
@@ -47,7 +47,7 @@ async def main():
         await pg.click('text=Проверить свою новость'); await pg.click('.modal .btn.primary'); await pg.wait_for_selector('.modal .chip.ok'); await pg.click('text=Показать анализ для этой компании'); await pg.wait_for_selector('.detail-drawer .sec'); step('own news ok'); await pg.keyboard.press('Escape')
         # аналитика, источник из KPI
         await pg.click('.nav-item >> text=Аналитика банка'); await pg.wait_for_selector('.kpi'); await pg.click('.kpi >> nth=0'); await pg.wait_for_selector('.modal .pdf-frame'); await pg.click('.src-tabs button >> text=Текст страницы'); await pg.wait_for_selector('.modal .src-text'); step('analytics source ok'); await pg.keyboard.press('Escape')
-        await pg.click('.notification'); await pg.wait_for_selector('.feed-card'); step('bell -> feed ok')
+        await pg.click('.notification'); await pg.wait_for_selector('.bell-dropdown'); await pg.click('.bell-actions >> text=Открыть ленту'); await pg.wait_for_selector('.feed-card'); step('bell dropdown -> feed ok')
         # узкие экраны
         for w,h in [(1000,800),(390,800)]:
             await pg.set_viewport_size({'width':w,'height':h}); await pg.wait_for_timeout(300)

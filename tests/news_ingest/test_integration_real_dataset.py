@@ -1,20 +1,18 @@
-"""Сквозная проверка на РЕАЛЬНЫХ данных кейса (если data/raw/*.csv лежат рядом): профили всех крупных компаний (выручка > 15 млрд)
-участника 1 + 9 документов банка участника 2. Без CSV тест пропускается."""
-import json
+"""Сквозная проверка на РЕАЛЬНЫХ данных кейса: профили всех крупных компаний (выручка > 15 млрд) участника 1 + 9 документов
+банка участника 2. Данные: ALFA_DATA_DIR, полные data/raw или срез data/demo из репозитория (все 115 крупных компаний)."""
 import unittest
 from pathlib import Path
 
 from contracts.news_vocab import TOPICS_V1
 from services.news_ingest.pipeline import IngestPipeline
 from services.news_ingest.store import NewsStore
-from tests.news_ingest.helpers import NOW
+from tests.news_ingest.helpers import NOW, case_data_dir
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/raw"
-HAVE = all((RAW / f).exists() for f in ("df_Uid_data_hack.csv", "df_Fid_Uid_link_hack.csv", "df_Uid_payment_hack.csv"))
+RAW = case_data_dir()
 
 
-@unittest.skipUnless(HAVE, "нет CSV кейса в data/raw")
+@unittest.skipUnless(RAW, "нет CSV кейса (ALFA_DATA_DIR, data/raw, data/demo)")
 class RealDataset(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from services.company_profile.access import AccessDenied, UserContext, UserNotFound, authorize, load_roles
+from services.company_profile.access import UserContext, UserNotFound, authorize, load_roles
 from services.company_profile.industry_terms import match_supply_chain
 from services.company_profile.prompt_view import build_prompt_view
 from services.company_profile.service import CompanyNotFound, CompanyQuarantined, ProfileService

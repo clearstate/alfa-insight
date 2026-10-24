@@ -74,9 +74,6 @@ class CleanData:
     report: ValidationReport
     files: dict[str, str]
 
-    def is_known(self, company_id: str) -> bool:
-        return company_id in self.companies.index
-
 
 def _strip(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     for c in cols:
@@ -96,6 +93,10 @@ def _parse_marks(series: pd.Series) -> tuple[pd.Series, pd.Series]:
     out[s.isin(_FALSE)] = False
     invalid = ~(s.isin(_TRUE) | s.isin(_FALSE) | (s == ""))
     return out, invalid
+
+
+# Выручка ровно 1000 — техническая заглушка, а не подтверждённая выручка (ответ организаторов, вебинар, вопрос 15).
+REVENUE_PLACEHOLDER = 1000.0
 
 
 def _parse_float(series: pd.Series) -> tuple[pd.Series, pd.Series]:
@@ -150,7 +151,13 @@ def _validate_companies(raw: RawData, report: ValidationReport):
         iss = Issue("invalid_revenue", "Некорректная выручка заменена на null", fname, cid, "REVENUE_COMPANY", [int(line)])
         report.add(iss)
         issues[cid].append(iss)
-    df["REVENUE_COMPANY"] = revenue
+    placeholder = revenue == REVENUE_PLACEHOLDER
+    for cid, line in df.loc[placeholder, ["SYNTHETIC_U", "_line"]].itertuples(index=False):
+        iss = Issue("revenue_placeholder", "Выручка 1000 — техническая заглушка, заменена на null", fname, cid,
+                    "REVENUE_COMPANY", [int(line)])
+        report.add(iss)
+        issues[cid].append(iss)
+    df["REVENUE_COMPANY"] = revenue.where(~placeholder, np.nan)
 
     text_cols = [c for c in COMPANY_COLUMNS if c not in MARK_FIELDS and c != "REVENUE_COMPANY"]
     for col in text_cols:

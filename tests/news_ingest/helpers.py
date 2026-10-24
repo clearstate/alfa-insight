@@ -1,12 +1,25 @@
 """Общие помощники тестов: локальный HTTP-сервер (без обращений к реальным сайтам) и сборка HTML/RSS-фикстур."""
 from __future__ import annotations
 
+import os
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Callable
+from pathlib import Path
 
 NOW = "2026-10-21T10:00:00+00:00"
+ROOT = Path(__file__).resolve().parents[2]
+CASE_FILES = ("df_Uid_data_hack.csv", "df_Fid_Uid_link_hack.csv", "df_Uid_payment_hack.csv")
+
+
+def case_data_dir() -> Path | None:
+    """Каталог CSV кейса — тот же порядок, что у сервиса (services/insight/settings.py): ALFA_DATA_DIR, полные data/raw,
+    затем срез data/demo (в репозитории; содержит все 115 крупных компаний). None — если нигде нет всех трёх файлов."""
+    cands = [Path(os.environ["ALFA_DATA_DIR"])] if os.environ.get("ALFA_DATA_DIR") else []
+    for d in cands + [ROOT / "data" / "raw", ROOT / "data" / "demo"]:
+        if all((d / f).exists() for f in CASE_FILES):
+            return d
+    return None
 
 
 class Server:

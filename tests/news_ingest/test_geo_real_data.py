@@ -1,5 +1,5 @@
 """География news_ingest должна совпадать с данными кейса символ в символ (profile.foreign_trade.countries, geography.region).
-Тесты на реальных CSV (data/raw) выполняются, если файлы есть; словари сгенерированы из них скриптом scripts/build_news_geo.py."""
+Тесты на реальных CSV (ALFA_DATA_DIR, data/raw или срез data/demo); словари сгенерированы скриптом scripts/build_news_geo.py."""
 import json
 import unittest
 from pathlib import Path
@@ -7,11 +7,13 @@ from pathlib import Path
 import yaml
 
 from services.news_ingest.enrich import Enricher
+from tests.news_ingest.helpers import case_data_dir
 
 ROOT = Path(__file__).resolve().parents[2]
 CFG = ROOT / "services/news_ingest/config"
 EN = Enricher()
-CSV = ROOT / "data/raw/df_Uid_data_hack.csv"
+DATA = case_data_dir()
+CSV = DATA / "df_Uid_data_hack.csv" if DATA else None
 PROFILE = json.loads((ROOT / "docs/examples/profile_U_25835.json").read_text(encoding="utf-8"))
 
 
@@ -40,7 +42,7 @@ class Geo(unittest.TestCase):
         self.assertIn(PROFILE["geography"]["region"]["value"], names_r)                       # 'Москва'
         self.assertEqual((len(names_c), len(names_r)), (128, 82))
 
-    @unittest.skipUnless(CSV.exists(), "нет data/raw/df_Uid_data_hack.csv")
+    @unittest.skipUnless(CSV, "нет CSV кейса (ALFA_DATA_DIR, data/raw, data/demo)")
     def test_dictionaries_cover_every_value_in_real_data(self):
         import pandas as pd
         c = pd.read_csv(CSV, sep=";", dtype=str)

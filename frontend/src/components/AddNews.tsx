@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { api, type J } from '../api'
 import { Modal } from './ui'
 
+const OUTCOME: Record<string, string> = { created: 'Добавлена', updated: 'Обновлена', duplicate: 'Дубль уже известной новости', skipped: 'Уже добавлена ранее', failed: 'Не обработана' }
 const SAMPLE = 'Правительство ввело квоты на экспорт зерна до конца сезона. Экспортёры зерна и оптовые торговцы продовольствием ожидают снижения выручки, а транспортные компании — падения объёмов перевозок.'
 
 export function AddNews({ onClose, onOpen }: { onClose: () => void; onOpen: (itemId: string) => void }) {
@@ -18,12 +19,12 @@ export function AddNews({ onClose, onOpen }: { onClose: () => void; onOpen: (ite
     <Modal title="Проверить на своей новости" onClose={onClose}>
       <p className="lead" style={{ fontSize: 14 }}>Вставьте текст любой новости: она пройдёт весь конвейер (классификация, отрасли, регионы, проверка безопасности), затем система оценит, насколько она значима для выбранной компании.</p>
       <label className="field">Заголовок<input value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-      <label className="field">Текст новости<textarea value={text} onChange={(e) => setText(e.target.value)} /></label>
+      <label className="field">Текст новости<textarea value={text} maxLength={20000} onChange={(e) => setText(e.target.value)} /></label>
       {err && <div className="err">{err}</div>}
       {res && (
         <div className="block">
           <div className="meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            <span className="chip ok">{res.outcome === 'created' ? 'Добавлена' : res.outcome === 'duplicate' ? 'Дубль' : res.outcome}</span>
+            <span className="chip ok">{OUTCOME[res.outcome] ?? res.outcome}</span>
             {(res.item?.topics ?? []).map((t: string) => <span key={t} className="chip fact">{t}</span>)}
             {(res.item?.countries ?? []).map((t: string) => <span key={t} className="chip company">{t}</span>)}
             {res.item?.injection && <span className="chip warn">заблокирована: инструкции для AI</span>}
@@ -32,7 +33,7 @@ export function AddNews({ onClose, onOpen }: { onClose: () => void; onOpen: (ite
           {res.item && !res.item.injection && <button className="btn primary small" style={{ justifySelf: 'start' }} onClick={() => onOpen(res.item.id)}>Показать анализ для этой компании</button>}
         </div>
       )}
-      <div className="cta-row"><button className="btn primary" disabled={busy || text.length < 40} onClick={send}>{busy ? 'Обрабатываю…' : 'Добавить и проанализировать'}</button></div>
+      <div className="cta-row"><button className="btn primary" disabled={busy || text.trim().length < 40} onClick={send}>{busy ? 'Обрабатываю…' : 'Добавить и проанализировать'}</button></div>
     </Modal>
   )
 }

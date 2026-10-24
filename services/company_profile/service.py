@@ -26,6 +26,13 @@ SCHEMA_VERSION = "0.3.0"
 log = logging.getLogger("company_profile")
 
 
+# Выручка: рубли за отчётный 2025 год (ответ организаторов, вебинар, вопрос 14).
+REVENUE_PERIOD = "2025"
+REVENUE_CONFIRMED = "Подтверждено организаторами кейса (вебинар, вопрос 14): выручка за отчётный 2025 год, в рублях"
+# Платежи: суммы и число операций с 1 января (вебинар, вопрос 20); дата среза в данных не указана.
+PAYMENTS_PERIOD = "с 1 января (дата среза не указана)"
+
+
 class CompanyNotFound(Exception):
     pass
 
@@ -62,6 +69,7 @@ class ProfileService:
         self._now = now or (lambda: datetime.now(timezone.utc))
         self._okved_cache: dict[str, OkvedInfo | None] = {}
         self._profile_cache: dict[str, dict] = {}
+        self._group_rev_cache: dict[str, tuple[float | None, int]] = {}
 
     @classmethod
     def from_data_dir(cls, data_dir: str | Path, rules_path: str | Path | None = None,
@@ -172,6 +180,33 @@ class ProfileService:
             "truncated": d.n_counterparties > top_n,
         }
 
+    # --- выручка и сегмент ---------------------------------------------------
+    def _group_revenue(self, gid: str | None) -> tuple[float | None, int]:
+        """(сумма известной выручки участников группы, число участников с известной выручкой). Кешируется."""
+        if not gid:
+            return None, 0
+        cache = self._group_rev_cache
+        if gid not in cache:
+            vals = [self.data.companies.at[m, "REVENUE_COMPANY"] for m in self.index.group_members.get(gid, [])]
+            vals = [float(x) for x in vals if x is not None and not (isinstance(x, float) and math.isnan(x))]
+            cache[gid] = (float(sum(vals)) if vals else None, len(vals))
+        return cache[gid]
+
+    def _large_business(self, r: dict) -> tuple[bool | None, str, bool]:
+        """(крупный бизнес?, основание, по выручке самого юрлица?). Крупный бизнес — выручка группы компаний (или юрлица)
+        >= порога (вебинар, вопрос 16)."""
+        thr = self.rules["thresholds"]["large_business_revenue"]
+        rev = r.get("REVENUE_COMPANY")
+        if rev is not None and rev >= thr:
+            return True, f"Выручка юрлица >= {thr:.0f} руб. за {REVENUE_PERIOD} г.", True
+        group_sum, _ = self._group_revenue(r.get("GROUP_ID"))
+        if group_sum is not None and group_sum >= thr:
+            return True, (f"Сумма выручки группы {r.get('GROUP_ID')} >= {thr:.0f} руб. за {REVENUE_PERIOD} г.: сегмент "
+                          "определяется по группе; такая группа может относиться и к среднему бизнесу"), False
+        if rev is None and group_sum is None:
+            return None, "Выручка юрлица и группы неизвестна (нет значения или заглушка 1000)", False
+        return False, f"Выручка юрлица и группы < {thr:.0f} руб. за {REVENUE_PERIOD} г.", False
+
     # --- профиль ------------------------------------------------------------
     def build_profile(self, company_id: str) -> dict:
         if company_id in self._profile_cache:
@@ -213,18 +248,18 @@ class ProfileService:
             "city_region_atypical": "city_region_atypical" in issue_codes,
         }
 
-        revenue = r.get("REVENUE_COMPANY")
         spark, fns = r.get("AMOUNT_WORKERS_SPARK_GRADATION"), r.get("AMOUNT_WORKERS_FNS_GRADATION")
+        large, large_basis, large_by_entity = self._large_business(r)
         size = {
             "revenue": F("REVENUE_COMPANY"),
-            "revenue_unit": unknown("Единицы не подтверждены организаторами; рабочее допущение — RUB",
-                                    source_file=cf, source_field="REVENUE_COMPANY"),
-            "revenue_period": unknown("Период выручки в данных не указан", source_file=cf,
-                                      source_field="REVENUE_COMPANY"),
-            "is_large_business": inference(
-                None if revenue is None else bool(revenue >= thr["large_business_revenue"]),
-                f"REVENUE_COMPANY >= {thr['large_business_revenue']:.0f} при допущении, что выручка в RUB",
-                source_file=cf, line=line, source_field="REVENUE_COMPANY", confidence="low"),
+            "revenue_unit": inference("RUB", REVENUE_CONFIRMED, source_file=cf, source_field="REVENUE_COMPANY",
+                                      confidence="high"),
+            "revenue_period": inference(REVENUE_PERIOD, REVENUE_CONFIRMED, source_file=cf, source_field="REVENUE_COMPANY",
+                                        confidence="high"),
+            # Сегмент «крупный бизнес» определяется по выручке группы, а не юрлица (вебинар, вопрос 16); группа с такой
+            # выручкой может относиться и к среднему бизнесу — поэтому по группе confidence = medium.
+            "is_large_business": inference(large, large_basis, source_file=cf, line=line, source_field="REVENUE_COMPANY",
+                                           confidence="high" if large_by_entity else "medium"),
             "workers_fns": F("AMOUNT_WORKERS_FNS_GRADATION"),
             "workers_spark": F("AMOUNT_WORKERS_SPARK_GRADATION"),
             "workers_conflict": inference(
@@ -266,8 +301,7 @@ class ProfileService:
         gid = r.get("GROUP_ID")
         members = self.index.group_members.get(gid, []) if gid else []
         limit = thr["group_members_limit"]
-        mem_rev = [self.data.companies.at[m, "REVENUE_COMPANY"] for m in members]
-        mem_rev = [x for x in mem_rev if x is not None and not (isinstance(x, float) and math.isnan(x))]
+        group_sum, n_known = self._group_revenue(gid)
         is_mega = len(members) > thr["mega_group_size"]
         group = {
             "group_id": F("GROUP_ID"),
@@ -276,8 +310,8 @@ class ProfileService:
             "members_truncated": len(members) - 1 > limit,
             "is_mega_group": is_mega,
             "group_revenue_sum": inference(
-                float(sum(mem_rev)) if mem_rev else None,
-                f"Сумма REVENUE_COMPANY участников группы с известной выручкой ({len(mem_rev)} из {len(members)}); "
+                group_sum,
+                f"Сумма REVENUE_COMPANY участников группы с известной выручкой ({n_known} из {len(members)}); "
                 "внутригрупповые обороты не исключены",
                 source_file=cf, source_field="REVENUE_COMPANY", confidence="low"),
         }
@@ -298,9 +332,9 @@ class ProfileService:
             "incoming": self._direction_view(incoming),
             "outgoing": self._direction_view(outgoing),
             "self_payments_excluded": self_pay,
-            "period": None,
-            "note": ("Обороты — только платежи, видимые банку, за неизвестный период; самоплатежи исключены; "
-                     "повторные строки пар просуммированы."),
+            "period": PAYMENTS_PERIOD,
+            "note": ("Обороты — только платежи, видимые банку, с 1 января (вебинар, вопрос 20; дата среза неизвестна); "
+                     "самоплатежи исключены; повторные строки пар просуммированы."),
         }
 
         topics = self._aggregate_topics(industry_rules, factors)
@@ -326,8 +360,8 @@ class ProfileService:
             "data_gaps": data_gaps,
             "reliability_notes": reliability_notes,
             "quality_issues": [i.as_dict() for i in issues if i.field != "NEGATIVEMARK"],
-            # NEGATIVEMARK в профиль не входит: смысл не подтверждён, ни в одном выводе не используется
-            # (минимизация данных). Сырое значение — только в company_profile.companies (роли etl/api).
+            # NEGATIVEMARK в профиль не входит: признак достоверности сведений о ключевом собственнике (вебинар, вопрос 13)
+            # ни в одном выводе не используется (минимизация данных). Сырое значение — только в company_profile.companies (роли etl/api).
         }
         self._profile_cache[company_id] = profile
         return profile
@@ -359,9 +393,8 @@ class ProfileService:
 
     def _data_gaps(self, r, issue_codes, incoming, outgoing, is_mega, okv) -> list[dict]:
         gaps = [
-            {"code": "revenue_unit_unknown", "message": "Единицы и период выручки не подтверждены",
-             "fields": ["REVENUE_COMPANY"]},
-            {"code": "no_dates", "message": "В данных нет дат: as_of неизвестен, временные агрегаты не строятся",
+            {"code": "no_dates", "message": "Дат операций в данных нет: платежи — суммы с 1 января, дата среза неизвестна; "
+                                            "помесячная динамика не строится",
              "fields": []},
             {"code": "trade_direction_unknown", "message": "Направление ВЭД (импорт/экспорт) неизвестно",
              "fields": ["FTS_FLAG", "FTS_COUNTRY_NAME"]},
@@ -464,7 +497,7 @@ class ProfileService:
             "city": r.get("CITY"),
             "region": r.get("REGION"),
             "revenue": rev,
-            "is_large_business": None if rev is None else bool(rev >= self.rules["thresholds"]["large_business_revenue"]),
+            "is_large_business": self._large_business(r)[0],
             "client_type": r.get("CL_TYPE"),
         }
 

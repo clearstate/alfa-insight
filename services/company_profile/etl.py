@@ -42,8 +42,11 @@ def profile_scope(svc: ProfileService, scope: str, extra_ids: list[str]) -> list
     elif scope == "all":
         ids = df.index.tolist()
     elif scope == "large":
+        # то же правило, что ProfileService._large_business: выручка юрлица или сумма выручки его группы >= порога
         thr = svc.rules["thresholds"]["large_business_revenue"]
-        ids = df.index[df["REVENUE_COMPANY"] >= thr].tolist()
+        rev = df["REVENUE_COMPANY"].astype(float)
+        group_sum = rev.groupby(df["GROUP_ID"]).transform("sum")
+        ids = df.index[(rev >= thr) | (group_sum >= thr)].tolist()
     else:
         raise ValueError(f"unknown profiles scope: {scope}")
     known = [c for c in extra_ids if c in df.index]

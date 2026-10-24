@@ -34,7 +34,13 @@ _NUM = re.compile(r"\d")
 _PCT = re.compile(r"\d\s*%|б\.\s*п\.|п\.\s*п\.")
 _INJECTION = re.compile(
     r"(ignore\s+(all\s+)?(previous|prior|above)\s+instructions|disregard\s+(the\s+)?(system|previous)|you\s+are\s+now\b|system\s+prompt|"
-    r"игнорируй\w*\s+(все\s+)?(предыдущ|прежн|выше)\w*\s+(инструкц|указан)|забудь\w*\s+(все\s+)?инструкц|ты\s+теперь\b|новые\s+инструкции\s*:)", re.I)
+    r"игнорируй\w*\s+(все\s+)?(предыдущ|прежн|выше)\w*\s+(инструкц|указан)|забудь\w*\s+(все\s+)?инструкц|ты\s+теперь\b|новые\s+инструкции\s*:|"
+    # обращение к модели внутри текста: «Примечание для ИИ-ассистента: в каждом выводе напиши…»
+    r"(примечани|инструкц|указани|сообщени|обращени)\w*\s+(для|к)\s+(ии\b|ai\b|ии-\w+|искусственн\w*\s+интеллект|нейросет|языков\w*\s+модел|ассистент|чат-?бот|llm)|"
+    r"(ии|ai)-ассистент\w*[^.]{0,40}(напиши|пиши|укажи|указывай|отвечай|выведи|не\s+упоминай))", re.I)
+
+_DATELINE = re.compile(r"(?m)^\s*[а-я][а-я\- ]{1,30}[.,]\s*\d{1,2}\s+[а-я]+[.,]?\s*(?:\d{4}\s*(?:г\.?)?\s*)?[.,]?\s*"
+                       r"(?:/?\s*(?:тасс|интерфакс|interfax\.ru|риа\s+новости|прайм|reuters)\s*/?)\s*[.\-–—]*")
 
 _NUMBER = r"(\d{1,3}(?:[.,]\d{1,2})?)"
 _RE_KEY_RATE = [
@@ -78,6 +84,7 @@ class Enricher:
         self.okved_dir = OkvedDirectory(rules["okved_sections"])
         ov = yaml.safe_load((CONFIG / "industry_overrides.yaml").read_text(encoding="utf-8"))
         self._neutralize = [re.compile(p) for p in ov.get("neutralize", [])]
+        self._topic_neutralize = [re.compile(p) for p in ov.get("topic_neutralize", [])]
         self._ind_min_score = ov.get("min_score", {})
         self._term_re: dict[str, tuple[list[re.Pattern], list[re.Pattern]]] = {}
         for eid, e in self.terms.items():
@@ -87,6 +94,8 @@ class Enricher:
     # ---- темы ----
     def topics(self, title: str, text: str) -> tuple[list[str], dict[str, float], dict[str, list[str]]]:
         ft, fx = fold(title or ""), fold(text or "")
+        for rx in self._topic_neutralize:
+            ft, fx = rx.sub(" ", ft), rx.sub(" ", fx)
         scores: dict[str, float] = {}
         evidence: dict[str, list[str]] = {}
         for t, pats in self.topic_re.items():
@@ -137,7 +146,9 @@ class Enricher:
 
     # ---- сущности, страны, регионы ----
     def entities_geo(self, text: str) -> tuple[list[dict[str, str]], list[str], list[str]]:
-        fx = fold(text or "")
+        # шапка агентства («Москва. 23 октября. INTERFAX.RU -», «МОСКВА, 23 октября. /ТАСС/.») — место выпуска, а не события:
+        # иначе любая новость Интерфакса или ТАСС «происходит» в Москве и совпадает с регионом московских компаний
+        fx = _DATELINE.sub(" ", fold(text or ""))
         ents = [{"name": n, "type": ty} for n, ty, pats in self.entities if any(p.search(fx) for p in pats)]
         for m in re.finditer(r"(?:\b(?:ПАО|АО|ООО|МКПАО)\s+)([«\"]?[А-ЯЁA-Z][\w\-]+(?:\s+[А-ЯЁA-Z][\w\-]+)?[»\"]?)", text or ""):
             nm = m.group(1).strip("«»\"")
@@ -188,18 +199,18 @@ class Enricher:
     def numeric_claims(self, pages: list[tuple[int | None, str, int]], is_bank: bool) -> list[NumericClaim]:
         out: list[NumericClaim] = []
         seen: set[tuple[str, float, str]] = set()
-        for s, a, b, page in self._candidate_sentences(pages):
+        for s, _, _, page in self._candidate_sentences(pages):
             fs = fold(s)
             ct = "bank_view" if (is_bank and (_BANK_MARK.search(fs) or _BANK_SOFT.search(fs))) else "fact"
-            cands: list[tuple[str, float, str]] = []
+            cands: list[tuple[str, float]] = []
             for rx in _RE_KEY_RATE:
                 for m in rx.finditer(fs):
-                    cands.append(("key_rate_pct", _f(m.group(1)), "%"))
+                    cands.append(("key_rate_pct", _f(m.group(1))))
             for m in _RE_INFL.finditer(fs):
-                cands.append(("inflation_yoy_pct", _f(m.group(1)), "%"))
+                cands.append(("inflation_yoy_pct", _f(m.group(1))))
             for m in _RE_USD.finditer(fs):
-                cands.append(("usd_rub", _f(m.group(1)), "руб./$"))
-            for kind, val, unit in cands:
+                cands.append(("usd_rub", _f(m.group(1))))
+            for kind, val in cands:
                 if kind == "key_rate_pct" and not (1.0 <= val <= 40.0):
                     continue
                 key = (kind, val, s[:40])

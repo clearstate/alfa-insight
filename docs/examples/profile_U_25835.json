@@ -1,8 +1,8 @@
 {
   "company_id": "U_25835",
   "schema_version": "0.3.0",
-  "built_at": "2026-10-20T12:22:57.048465+00:00",
-  "data_run_id": "run_20261020T122044Z_43be2284",
+  "built_at": "2026-10-22T23:25:27.416310+00:00",
+  "data_run_id": null,
   "industry": {
     "okved_code": {
       "value": "45.31.1",
@@ -118,24 +118,24 @@
       "confidence": null
     },
     "revenue_unit": {
-      "value": null,
-      "claim_type": "unknown",
+      "value": "RUB",
+      "claim_type": "inference",
       "source_file": "df_Uid_data_hack.csv",
       "source_row_id": null,
       "source_field": "REVENUE_COMPANY",
       "as_of": null,
-      "method": "Единицы не подтверждены организаторами; рабочее допущение — RUB",
-      "confidence": null
+      "method": "Подтверждено организаторами кейса (вебинар, вопрос 14): выручка за отчётный 2025 год, в рублях",
+      "confidence": "high"
     },
     "revenue_period": {
-      "value": null,
-      "claim_type": "unknown",
+      "value": "2025",
+      "claim_type": "inference",
       "source_file": "df_Uid_data_hack.csv",
       "source_row_id": null,
       "source_field": "REVENUE_COMPANY",
       "as_of": null,
-      "method": "Период выручки в данных не указан",
-      "confidence": null
+      "method": "Подтверждено организаторами кейса (вебинар, вопрос 14): выручка за отчётный 2025 год, в рублях",
+      "confidence": "high"
     },
     "is_large_business": {
       "value": true,
@@ -144,8 +144,8 @@
       "source_row_id": "line:6325",
       "source_field": "REVENUE_COMPANY",
       "as_of": null,
-      "method": "REVENUE_COMPANY >= 15000000000 при допущении, что выручка в RUB",
-      "confidence": "low"
+      "method": "Выручка юрлица >= 15000000000 руб. за 2025 г.",
+      "confidence": "high"
     },
     "workers_fns": {
       "value": "Более 251",
@@ -653,8 +653,8 @@
       "pay_cnt": 72,
       "n_rows": 1
     },
-    "period": null,
-    "note": "Обороты — только платежи, видимые банку, за неизвестный период; самоплатежи исключены; повторные строки пар просуммированы."
+    "period": "с 1 января (дата среза не указана)",
+    "note": "Обороты — только платежи, видимые банку, с 1 января (вебинар, вопрос 20; дата среза неизвестна); самоплатежи исключены; повторные строки пар просуммированы."
   },
   "sensitivity_factors": [
     {
@@ -662,7 +662,7 @@
       "level": "high",
       "claim_type": "inference",
       "rule_id": "rate_sensitivity_v1",
-      "rationale": "Есть продукты с процентной/кредитной составляющей (loans, leasing): изменения ключевой ставки и условий кредитования влияют на стоимость обслуживания и рефинансирования. Тип ставки (фиксированная/плавающая) и объём долга в данных неизвестны.",
+      "rationale": "Есть продукты с процентной/кредитной составляющей (кредиты, лизинг): изменения ключевой ставки и условий кредитования влияют на стоимость обслуживания и рефинансирования. Тип ставки (фиксированная/плавающая) и объём долга в данных неизвестны.",
       "based_on": [
         {
           "source_file": "df_Uid_data_hack.csv",
@@ -729,7 +729,7 @@
       "level": "high",
       "claim_type": "inference",
       "rule_id": "fx_trade_v1",
-      "rationale": "Компания есть в данных ФТС (внешнеэкономическая деятельность), страны: ОАЭ, КИТАЙ, ИТАЛИЯ: курсы валют, санкции и логистика могут влиять на расчёты и поставки. Направление (импорт/экспорт) в данных неизвестно.",
+      "rationale": "Компания есть в данных ФТС (внешнеэкономическая деятельность), страны: ОАЭ, Китай, Италия: курсы валют, санкции и логистика могут влиять на расчёты и поставки. Направление (импорт/экспорт) в данных неизвестно.",
       "based_on": [
         {
           "source_file": "df_Uid_data_hack.csv",
@@ -825,13 +825,13 @@
       "level": "low",
       "claim_type": "inference",
       "rule_id": "concentration_v1",
-      "rationale": "Эвристика: доля крупнейшего контрагента в видимом банку обороте (входящие: 0.0639, исходящие: 0.274). Это не доказательство зависимости: банк видит только часть платежей, период неизвестен.",
+      "rationale": "Эвристика: доля крупнейшего контрагента в видимом банку обороте (входящие: 6%, исходящие: 27%). Это не доказательство зависимости: банк видит только часть платежей (с 1 января, дата среза неизвестна).",
       "based_on": [
         {
           "source_file": "df_Uid_payment_hack.csv",
           "source_row_id": null,
           "source_field": "PAY_AMT",
-          "value": "aggregated by counterparty, self-payments excluded"
+          "value": "суммы по контрагентам, переводы самой себе исключены"
         }
       ],
       "confidence": "low",
@@ -869,7 +869,7 @@
           "source_file": "df_Uid_payment_hack.csv",
           "source_row_id": null,
           "source_field": "PAYER/BENEFICIARY",
-          "value": "counterparty MAINOKVED_CODE from companies file"
+          "value": "ОКВЭД контрагента из файла юрлиц"
         }
       ],
       "confidence": "medium",
@@ -2370,15 +2370,8 @@
   ],
   "data_gaps": [
     {
-      "code": "revenue_unit_unknown",
-      "message": "Единицы и период выручки не подтверждены",
-      "fields": [
-        "REVENUE_COMPANY"
-      ]
-    },
-    {
       "code": "no_dates",
-      "message": "В данных нет дат: as_of неизвестен, временные агрегаты не строятся",
+      "message": "Дат операций в данных нет: платежи — суммы с 1 января, дата среза неизвестна; помесячная динамика не строится",
       "fields": []
     },
     {

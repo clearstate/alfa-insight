@@ -1,4 +1,4 @@
-import pandas as pd, csv
+import pandas as pd
 pd.set_option('display.width',250); pd.set_option('display.max_columns',50); pd.set_option('display.max_colwidth',60)
 for f in ['df_Uid_data_hack.csv','df_Fid_Uid_link_hack.csv','df_Uid_payment_hack.csv']:
     raw=open(f,'rb').read(3); print('==',f,'BOM' if raw==b'\xef\xbb\xbf' else 'noBOM')

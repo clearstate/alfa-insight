@@ -22,6 +22,27 @@ _LEVEL_ORDER = {"unknown": -1, "none": 0, "low": 1, "medium": 2, "high": 3}
 _DOWNGRADE = {"high": "medium", "medium": "low", "low": "low"}
 
 
+def _pct(share: float | None) -> str:
+    return "нет данных" if share is None else f"{share * 100:.0f}%"
+
+
+def country_title(name: str) -> str:
+    """Страна из FTS_COUNTRY_NAME для текста: «КИТАЙ» -> «Китай», «ЮЖНАЯ КОРЕЯ» -> «Южная Корея»,
+    «БОСНИЯ И ГЕРЦЕГОВИНА» -> «Босния и Герцеговина»; аббревиатуры (ОАЭ, США) — как есть."""
+    if len(name) <= 3:
+        return name
+    if name == "КОТ Д'ИВУАР":
+        return "Кот-д’Ивуар"
+    return " ".join(w.lower() if w == "И" else "-".join(p.capitalize() for p in w.split("-")) for w in name.split())
+
+
+
+
+# продукты в текстах обоснований (коды продуктов — в details.products_present)
+PRODUCT_TITLES_RU = {"rko": "расчётно-кассовое обслуживание", "loans": "кредиты", "leasing": "лизинг", "deposits": "депозиты",
+                     "payroll_project": "зарплатный проект", "guarantees": "банковские гарантии", "factoring": "факторинг"}
+
+
 def load_rules(path: str | Path | None = None) -> dict:
     path = Path(path) if path else CONFIG_DIR / "feature_rules.yaml"
     with open(path, encoding="utf-8") as fh:
@@ -148,7 +169,7 @@ class FeatureEngine:
         else:
             level = "unknown"
         if level in ("high", "medium"):
-            why = (f"Есть продукты с процентной/кредитной составляющей ({', '.join(present)}): изменения ключевой "
+            why = (f"Есть продукты с процентной/кредитной составляющей ({', '.join(PRODUCT_TITLES_RU.get(p, p) for p in present)}): изменения ключевой "
                    "ставки и условий кредитования влияют на стоимость обслуживания и рефинансирования. "
                    "Тип ставки (фиксированная/плавающая) и объём долга в данных неизвестны.")
         elif level == "none":
@@ -185,7 +206,7 @@ class FeatureEngine:
         if flag is True or countries:
             level = "high"
             why = ("Компания есть в данных ФТС (внешнеэкономическая деятельность)"
-                   + (f", страны: {', '.join(countries)}" if countries else "")
+                   + (f", страны: {', '.join(country_title(x) for x in countries)}" if countries else "")
                    + ": курсы валют, санкции и логистика могут влиять на расчёты и поставки. "
                      "Направление (импорт/экспорт) в данных неизвестно.")
         elif own == "foreign":
@@ -214,7 +235,7 @@ class FeatureEngine:
             return self._factor("payroll_exposure", "unknown", "Численность по ФНС не заполнена или не распознана.",
                                 ev, "low", details={"workers_fns": grade, "payroll_project": zpp})
         level = base if zpp is True else _DOWNGRADE[base]
-        why = (f"Численность по ФНС: {grade}"
+        why = (f"Численность по ФНС: {grade[:1].lower() + grade[1:]}"         # «Более 251» -> «более 251»
                + ("; есть зарплатный проект" if zpp is True else "")
                + ". Рынок труда и рост зарплат влияют на фонд оплаты труда.")
         return self._factor("payroll_exposure", level, why, ev, "medium",
@@ -256,14 +277,14 @@ class FeatureEngine:
         levels = [x["level"] for x in (inc, out)]
         level = max(levels, key=lambda lv: _LEVEL_ORDER[lv])
         ev = [{"source_file": c.payments_file, "source_row_id": None, "source_field": "PAY_AMT",
-               "value": "aggregated by counterparty, self-payments excluded"}]
+               "value": "суммы по контрагентам, переводы самой себе исключены"}]
         if level == "unknown":
             why = (f"Видимых банку контрагентов меньше {thr['min_counterparties']} или платежей нет — "
                    "концентрацию оценить нельзя.")
         else:
             why = ("Эвристика: доля крупнейшего контрагента в видимом банку обороте "
-                   f"(входящие: {inc['top1_share']}, исходящие: {out['top1_share']}). "
-                   "Это не доказательство зависимости: банк видит только часть платежей, период неизвестен.")
+                   f"(входящие: {_pct(inc['top1_share'])}, исходящие: {_pct(out['top1_share'])}). "
+                   "Это не доказательство зависимости: банк видит только часть платежей (с 1 января, дата среза неизвестна).")
         return self._factor("counterparty_concentration", level, why, ev, "low",
                             details={"incoming": inc, "outgoing": out,
                                      "thresholds": {k: thr[k] for k in ("top1_share_high", "top1_share_medium",
@@ -353,7 +374,7 @@ class FeatureEngine:
                 topic_shares[t] = max(topic_shares.get(t, 0.0), share)
         topics = sorted(topic_shares, key=lambda t: (-topic_shares[t], t))
         ev = [{"source_file": c.payments_file, "source_row_id": None, "source_field": "PAYER/BENEFICIARY",
-               "value": "counterparty MAINOKVED_CODE from companies file"}]
+               "value": "ОКВЭД контрагента из файла юрлиц"}]
         details = {
             "suppliers": suppliers, "customers": customers,
             "supplier_codes": sup_codes["codes"], "customer_codes": cus_codes["codes"],

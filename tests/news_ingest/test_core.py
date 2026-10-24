@@ -86,6 +86,17 @@ class Rules(unittest.TestCase):
         ind = EN.industries("Бумажная промышленность", "Производство газетной бумаги и целлюлозы растёт, лесопромышленники и бумажные комбинаты.")
         self.assertIn("forestry_paper", [m["entry_id"] for m in ind["matches"]])
 
+    def test_regression_real_feed_false_positives(self):
+        """Ложные срабатывания на реальной ленте: награды «за вклад», ядерное топливо, хоккейный «СКА-Нефтяник»."""
+        self.assertNotIn("deposit_rates", EN.topics("Награды", "Савельев и Григоренко награждены за большой вклад в решение государственных задач.")[0])
+        self.assertIn("deposit_rates", EN.topics("Вклады", "Ставки по вкладам в крупных банках снизились, клиенты переводят сбережения.")[0])
+        nuclear = "Posiva Oy первой в мире получила лицензию на захоронение отработавшего ядерного топлива. " * 3
+        self.assertNotIn("fuel_prices", EN.topics("Posiva", nuclear)[0])
+        self.assertEqual(EN.industries("Posiva", nuclear)["matches"], [])
+        hockey = ("\"СКА-Нефтяник\" выиграл Суперкубок", "\"СКА-Нефтяник\" в седьмой раз выиграл Суперкубок по хоккею с мячом.")
+        self.assertEqual(EN.industries(*hockey)["matches"], [])
+        self.assertEqual(EN.topics(*hockey)[0], [])
+
     def test_regression_unfavorable_is_not_bank_view(self):
         _, v = EN.analyse_sentences([(1, "Ранее в июле ведомство объявило о паузе в аукционах, ссылаясь на неблагоприятную конъюнктуру рынка.", 0)], True, 5, [])
         self.assertEqual(v, [])

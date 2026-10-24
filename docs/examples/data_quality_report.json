@@ -7,12 +7,11 @@
     "person_links_unknown_company": 7885,
     "payments_rows": 1380585,
     "payments_self_rows": 27406,
-    "payments_pairs": 1353162,
-    "etl_seconds": 33.0,
-    "profiles_scope": "large"
+    "payments_pairs": 1353162
   },
   "counters": {
     "id_collision": 1,
+    "revenue_placeholder": 601,
     "fts_inconsistent": 430,
     "workers_conflict": 23,
     "city_region_atypical": 37,
@@ -39,6 +38,208 @@
           85524,
           85525,
           85526
+        ]
+      }
+    ],
+    "revenue_placeholder": [
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_1477",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          378
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_4001",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          956
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_6177",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          1172
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_3633",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          1525
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_11102",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          2246
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_11120",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          2247
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_8314",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          2401
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_8317",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          2403
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_8641",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          2799
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_13538",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          2814
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_12827",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          3033
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_15092",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          3112
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_14993",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          3356
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_11267",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          3416
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_13482",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          3681
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_11539",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          3709
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_16819",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          4105
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_18825",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          4150
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_16937",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          4237
+        ]
+      },
+      {
+        "code": "revenue_placeholder",
+        "message": "Выручка 1000 — техническая заглушка, заменена на null",
+        "source_file": "df_Uid_data_hack.csv",
+        "company_id": "U_17989",
+        "field": "REVENUE_COMPANY",
+        "lines": [
+          4327
         ]
       }
     ],

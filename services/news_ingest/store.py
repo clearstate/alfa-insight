@@ -2,11 +2,12 @@
 
 Даты хранятся как ISO-8601 UTC TEXT (сортируются лексикографически), JSON — как TEXT. Фильтры по темам/отраслям/регионам —
 через связующие таблицы item_topics/item_industries/item_regions (индексируемые в обоих диалектах); tsvector-поиск добавляет участник 4.
-PostgreSQL-ветка (psycopg) в этой среде НЕ запускалась (нет драйвера и сервера) — проверять на docker compose.
+PostgreSQL-ветка: те же запросы, «?» заменяется на «%s», имена таблиц квалифицируются схемой (_qualify).
 """
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import threading
 from contextlib import contextmanager
@@ -69,6 +70,11 @@ TABLES: list[tuple[str, list[tuple[str, str, str]], list[str], list[tuple[str, s
     ("llm_usage", [("id", "serial", "PRIMARY KEY"), ("at", "text", "NOT NULL"), ("module", "text", "NOT NULL"),
                    ("model", "text", ""), ("tokens_in", "int", ""), ("tokens_out", "int", ""), ("cached", "int", "NOT NULL")],
      [], [("ix_usage_at", "at")]),
+    # прогоны источников по расписанию (scheduler.py): контроль последнего успешного обновления
+    ("source_runs", [("id", "serial", "PRIMARY KEY"), ("source_id", "text", "NOT NULL"), ("started_at", "text", "NOT NULL"),
+                     ("finished_at", "text", "NOT NULL"), ("ok", "int", "NOT NULL"), ("created", "int", ""), ("updated", "int", ""),
+                     ("duplicate", "int", ""), ("skipped", "int", ""), ("failed", "int", ""), ("error", "text", "")],
+     [], [("ix_runs_src", "source_id, id")]),
 ]
 
 PG_SCHEMA = "news_ingest"
@@ -250,9 +256,6 @@ class NewsStore:
     def touch_seen(self, item_id: str) -> None:
         self.execute("UPDATE news_items SET last_seen_at=? WHERE id=?", (now_iso(), item_id))
 
-    def save_duplicate_marker(self, item_id: str, dup_of: str) -> None:
-        self.execute("UPDATE news_items SET dup_of=?, processing_status='duplicate', updated_at=? WHERE id=?", (dup_of, now_iso(), item_id))
-
     # ---- кластеры ----
     def get_cluster(self, cid: str) -> dict[str, Any] | None:
         r = self.query("SELECT * FROM event_clusters WHERE id=?", (cid,))
@@ -281,6 +284,23 @@ class NewsStore:
 
     def changes_since(self, last_id: int = 0, limit: int = 500) -> list[dict[str, Any]]:
         return self.query("SELECT * FROM ingest_events WHERE id>? ORDER BY id LIMIT ?", (last_id, limit))
+
+    def add_source_run(self, source_id: str, started_at: str, finished_at: str, ok: bool, counts: dict[str, int],
+                       error: str | None = None) -> None:
+        self.execute("INSERT INTO source_runs (source_id,started_at,finished_at,ok,created,updated,duplicate,skipped,failed,error) "
+                     "VALUES (?,?,?,?,?,?,?,?,?,?)",
+                     (source_id, started_at, finished_at, 1 if ok else 0, counts.get("created", 0), counts.get("updated", 0),
+                      counts.get("duplicate", 0), counts.get("skipped", 0), counts.get("failed", 0), (error or "")[:2000] or None))
+
+    def source_run_state(self, source_id: str) -> dict[str, Any]:
+        """Последний прогон, последний успешный прогон и число неудачных прогонов подряд (с конца)."""
+        last = self.query("SELECT * FROM source_runs WHERE source_id=? ORDER BY id DESC LIMIT 1", (source_id,))
+        ok = self.query("SELECT * FROM source_runs WHERE source_id=? AND ok=1 ORDER BY id DESC LIMIT 1", (source_id,))
+        since = ok[0]["id"] if ok else 0
+        fails = self.query("SELECT COUNT(*) AS n FROM source_runs WHERE source_id=? AND ok=0 AND id>?", (source_id, since))[0]["n"]
+        newest = self.query("SELECT MAX(created_at) AS t FROM news_items WHERE source_id=?", (source_id,))[0]["t"]
+        return {"last_run": last[0] if last else None, "last_success": ok[0] if ok else None,
+                "consecutive_failures": int(fails), "last_item_created_at": newest}
 
     def errors(self, limit: int = 100) -> list[dict[str, Any]]:
         return self.query("SELECT * FROM pipeline_errors ORDER BY id DESC LIMIT ?", (limit,))
@@ -354,5 +374,4 @@ class NewsStore:
 
 
 def _qualify(sql: str, table: str) -> str:  # pragma: no cover
-    import re
     return re.sub(rf"(?<![\w.]){table}(?![\w])", f"{PG_SCHEMA}.{table}", sql)

@@ -20,6 +20,9 @@ from .textutil import minhash_similarity
 DUP_T = 0.80
 EVENT_SIM_MIN = 0.25
 WINDOW_DAYS = 14
+# Почти одинаковый текст с датами публикации, разнесёнными больше чем на DUP_MAX_DAYS, — это не перепечатка, а новый выпуск
+# шаблонного материала (еженедельный мониторинг ставок, регулярная статистика): цифры другие, скрывать его как дубль нельзя.
+DUP_MAX_DAYS = 3
 
 
 @dataclass
@@ -54,13 +57,19 @@ def decide(store: NewsStore, item_id: str, url_key: str, content_hash: str, sig:
     if is_bank:
         return Decision("new", reasons=["bank_document"])
     ref = _day(event_date) or _day(published_at) or _day(retrieved_at) or datetime.now(timezone.utc)
+    pub_ref = _day(published_at) or ref
     since = (ref - timedelta(days=WINDOW_DAYS)).strftime("%Y-%m-%dT%H:%M:%S+00:00")
     best: tuple[float, dict[str, Any]] | None = None
     best_event: tuple[float, dict[str, Any], list[str]] | None = None
     for row in store.recent_for_clustering(since, item_id):
+        row_day = _day(row["event_date"]) or _day(row["published_at"])
+        if row_day is not None and (row_day - ref).days > WINDOW_DAYS:   # окно симметрично: более поздние материалы тоже
+            continue
         other = json.loads(row["minhash"] or "[]")
         sim = minhash_similarity(sig, other)
-        if sim >= DUP_T and (best is None or sim > best[0]):
+        row_pub = _day(row["published_at"]) or row_day
+        close = row_pub is None or abs((row_pub - pub_ref).total_seconds()) <= DUP_MAX_DAYS * 86400
+        if sim >= DUP_T and close and (best is None or sim > best[0]):
             best = (sim, row)
             continue
         cand = json.loads(row["item_json"])

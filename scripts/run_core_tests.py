@@ -30,6 +30,11 @@ def main() -> int:
         except ModuleNotFoundError as exc:
             skipped.append(f"{mod} (missing dependency: {exc.name})")
             continue
+        except BaseException as exc:  # noqa: BLE001 — pytest.importorskip/skip на уровне модуля (BaseException)
+            if type(exc).__name__ != "Skipped":
+                raise
+            skipped.append(f"{mod} ({exc})")
+            continue
         for name, fn in inspect.getmembers(module, inspect.isfunction):
             if not name.startswith("test_") or fn.__module__ != module.__name__:
                 continue

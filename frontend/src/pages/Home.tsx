@@ -1,5 +1,8 @@
 import type { J } from '../api'
 import { Icon } from '../components/Icon'
+import { plural } from '../components/ui'
+
+const count = (n: number, forms: [string, string, string]) => `${n} ${plural(n, forms)}`
 
 type Props = { user: J; company: J; feed: J | null; onOpenFeed: () => void; onOpen: (id: string) => void; go: (p: string) => void }
 
@@ -14,22 +17,31 @@ export function Home({ user, company, feed, onOpenFeed, onOpen, go }: Props) {
         <div>
           <h2>Что происходит на рынке — и что это значит для вашей компании</h2>
           <p>Новости и аналитика Альфа-Банка, отобранные под ваш бизнес: что произошло, чем это грозит или что даёт, что думает банк и что можно сделать.</p>
-          <div className="entry-counts"><span>{c.risk ?? 0} требуют внимания</span><span>{c.opportunity ?? 0} возможностей</span><span>{c.bank ?? 0} материала банка</span></div>
+          <div className="entry-counts"><span>{count(c.risk ?? 0, ['требует внимания', 'требуют внимания', 'требуют внимания'])}</span><span>{count(c.opportunity ?? 0, ['возможность', 'возможности', 'возможностей'])}</span><span>{count(c.bank ?? 0, ['материал банка', 'материала банка', 'материалов банка'])}</span></div>
         </div>
         <button className="btn primary" style={{ minHeight: 52, padding: '0 24px', fontSize: 15 }} onClick={onOpenFeed}>Открыть аналитику <Icon name="arrow" size={18} /></button>
       </section>
 
-      <div className="section-heading" style={{ marginTop: 30 }}><div><h2>Главное сегодня</h2><span className="sub">Три самых значимых для вашей компании события</span></div></div>
-      <div className="mini-grid">
-        {top.map((t) => (
-          <button className={`mini-card ${t.type}`} key={t.id} onClick={() => onOpen(t.id)}>
-            <span className={`tag ${t.type}`} style={{ justifySelf: 'start' }}>{t.label}</span><h4>{t.headline}</h4><p>{t.title}</p>
-          </button>))}
-        {top.length === 0 && <div className="empty" style={{ gridColumn: '1/-1' }}>Загружаем ленту…</div>}
-      </div>
+      <section className="brief" aria-label="Утренняя сводка">
+        <div className="brief-head"><h2>Сводка на {feed?.as_of_ru?.replace(' г.', '') ?? 'сегодня'}</h2><small>Три события, важные для компании сегодня, и что с ними сделать</small></div>
+        {top.length > 0 ? (
+          <ol className="brief-list">
+            {top.map((t, i) => (
+              <li key={t.id}><button className="brief-item" onClick={() => onOpen(t.id)}>
+                <span className="brief-n">{i + 1}</span>
+                <span>
+                  <span className={`tag ${t.type}`}>{t.label}</span>
+                  <h4>{t.headline}</h4>
+                  <p>{t.title}{(t.reasons ?? []).length > 0 ? ` · почему вам: ${t.reasons.join(', ')}` : ''}</p>
+                  {t.action && <p className="brief-do"><b>Что сделать:</b> {t.action}</p>}
+                </span>
+              </button></li>))}
+          </ol>
+        ) : <div className="empty" style={{ marginTop: 12 }}>{feed ? 'Значимых для компании событий пока нет' : 'Загружаем ленту…'}</div>}
+      </section>
 
       <div className="tiles">
-        <button className="tile" onClick={() => go('accounts')}><Icon name="wallet" /><b>Счета и платежи</b><span>Остатки, переводы и выписки (демонстрационный раздел)</span></button>
+        <button className="tile" onClick={() => go('accounts')}><Icon name="wallet" /><b>Счета и платежи</b><span>Платёжные потоки, контрагенты и продукты компании</span></button>
         <button className="tile" onClick={() => go('analytics')}><Icon name="chart" /><b>Аналитика банка</b><span>Прогнозы по ставке, курсу, инфляции и актуальные версии</span></button>
         <button className="tile" onClick={onOpenFeed}><Icon name="spark" /><b>Новостная аналитика</b><span>Персональная лента с объяснением влияния на бизнес</span></button>
       </div>

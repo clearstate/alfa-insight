@@ -7,6 +7,9 @@ import tempfile
 _TMP = tempfile.mkdtemp(prefix="alfa_insight_test_")
 os.environ["ALFA_RUNTIME_DIR"] = _TMP
 os.environ.pop("LLM_BASE_URL", None)
+os.environ["ALFA_LIVE_FEEDS"] = "0"         # тесты не ходят в сеть; живые ленты проверяются на локальном сервере
+os.environ.pop("ALFA_DEMO_NEWS", None)      # без живых лент демо-новости включены — на них построены сценарии тестов
+os.environ.pop("ALFA_AS_OF", None)
 
 from services.insight.service import InsightService  # noqa: E402
 from services.insight.settings import Settings  # noqa: E402

@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import math
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 
 _WORD = re.compile(r"[a-zа-я0-9]+", re.I)
 NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[\u00a0 ]\d{3})+|\d+)(?:[.,](\d+))?")
 MONTHS = {"января": 1, "февраля": 2, "марта": 3, "апреля": 4, "мая": 5, "июня": 6, "июля": 7, "августа": 8,
           "сентября": 9, "октября": 10, "ноября": 11, "декабря": 12}
 MONTH_NAMES = {v: k for k, v in MONTHS.items()}
+MSK = timezone(timedelta(hours=3))           # опорная дата сервиса и календарь пользователя — московские
 
 
 def ru_num(v: float | int | None, nd: int = 1, strip: bool = False) -> str:
@@ -21,23 +22,29 @@ def ru_num(v: float | int | None, nd: int = 1, strip: bool = False) -> str:
     return s
 
 
+def msk_date(d: str | date | datetime) -> date:
+    """Календарная дата по Москве. Момент времени (ISO с временем, без пояса — UTC, как хранит news_ingest) переводится
+    в МСК; дата без времени (опорная дата «2026-10-21») берётся как есть."""
+    if isinstance(d, str):
+        if len(d) <= 10:
+            return date.fromisoformat(d)
+        d = datetime.fromisoformat(d.replace("Z", "+00:00"))
+    if isinstance(d, datetime):
+        return (d if d.tzinfo else d.replace(tzinfo=timezone.utc)).astimezone(MSK).date()
+    return d
+
+
 def ru_date(d: str | date | datetime | None) -> str:
     if not d:
         return "дата не указана"
-    if isinstance(d, str):
-        d = datetime.fromisoformat(d[:10]).date()
-    if isinstance(d, datetime):
-        d = d.date()
+    d = msk_date(d)
     return f"{d.day} {MONTH_NAMES[d.month]} {d.year} г."
 
 
 def ru_date_short(d: str | date | datetime | None) -> str:
     if not d:
         return "—"
-    if isinstance(d, str):
-        d = datetime.fromisoformat(d[:10]).date()
-    if isinstance(d, datetime):
-        d = d.date()
+    d = msk_date(d)
     return f"{d.day} {MONTH_NAMES[d.month]}"
 
 
@@ -89,8 +96,44 @@ def significant_numbers(text: str) -> list[float]:
     return out
 
 
-UNCONFIRMED_RE = re.compile(r"неподтвержд|не\s+подтвержд|по\s+слухам|якобы|инсайд|анонимн\w+\s+источник|источник\s+не\s+раскрывает", re.I)
-INJECTION_RE = re.compile(r"игнорир\w+\s+(все\s+)?(предыдущ|прежн|систем)|ignore\s+(all\s+)?(previous|prior)|system\s+prompt|системн\w+\s+промпт", re.I)
+# «инсайд» — маркер слуха; «инсайдерская информация» (юридический термин из релизов ЦБ) им не является
+UNCONFIRMED_RE = re.compile(r"неподтвержд|не\s+подтвержд|по\s+слухам|якобы|\bинсайд(?!ерск)\w*|анонимн\w+\s+источник|источник\s+не\s+раскрывает", re.I)
+INJECTION_RE = re.compile(r"игнорир\w+\s+(все\s+)?(предыдущ|прежн|систем)|ignore\s+(all\s+)?(previous|prior)|system\s+prompt|системн\w+\s+промпт|"
+                          # обращение к модели внутри текста новости: «Примечание для ИИ-ассистента: в каждом выводе напиши…»
+                          r"(примечани|инструкц|указани|сообщени|обращени)\w*\s+(для|к)\s+(ии\b|ai\b|ии-\w+|искусственн\w*\s+интеллект|нейросет|"
+                          r"языков\w*\s+модел|ассистент|чат-?бот|llm)|(ии|ai)-ассистент\w*[^.]{0,40}(напиши|пиши|укажи|указывай|отвечай|выведи|не\s+упоминай)", re.I)
+
+
+# Экономическая суть новости (заголовок или начало текста): без неё новость не попадает в ленту, как бы ни совпали темы и
+# отрасли — иначе сводка с фронта («уничтожено N автомобилей») становилась новостью для автодилера.
+ECON_RE = re.compile(r"\bцен[аыуе]?\b|\bцены\b|подорож|подешев|дешевеет|дорожает|тариф|(?<![а-я])спрос|продаж|выпуск|производств|поставк|"
+                     r"импорт|экспорт|пошлин|налог|ставк|кредит|лизинг|инвест|выручк|прибыл|убыт|\bрын(?:ок|ка|ке|ку)\b|дефицит|"
+                     r"санкци|субсид|\bкурс|инфляц|зарплат|заказ|контракт|закуп|оборот|бюджет|\bввп\b|отгруз|логистик|перевоз|груз|"
+                     r"аренд|ипотек|долг|облигац|депозит|вклад|дивиденд|банкрот|пункт\w*\s+пропуск|утилизационн|маркетплейс|"
+                     r"предприят|завод|отрасл|бизнес|расход|затрат|компани\w*\s+(?:сократ|увелич|снизил|получил|потерял)")
+# Изменение на рынке отрасли (для вывода «событие затрагивает отрасль ваших контрагентов»): не упоминание отрасли, а сдвиг
+# цен, спроса, выпуска, поставок, регулирования торговли. «Очередь грузовиков на границе» и «бумаги в Ломбардном списке» — нет.
+MARKET_SHIFT_RE = re.compile(r"\bцен[аыуе]?\b|\bцены\b|подорож|подешев|дорожа|дешеве|тариф|(?<![а-я])спрос|продаж|"
+                             r"(?<!номер\s)выпуск(?!\w*\s+(?:облигац|ценн|бумаг))|производств|поставк|"
+                             r"импорт|экспорт|пошлин|утилизационн|дефицит|запрет|санкци|субсид|квот|отгруз|заказ|закуп|выручк|"
+                             r"\bрын(?:ок|ка|ке|ку)\b|расход|затрат")
+# Некоммерческие сюжеты в заголовке: война, политика, происшествия, спорт, здоровье. Такая новость показывается, только если
+# экономическая суть есть в самом заголовке («Санкции против … ударят по экспорту»).
+OFFTOPIC_RE = re.compile(r"\bвсу\b|\bвс\s+рф\b|\bсво\b|минобороны|\bдрон|беспилотник|ракет|обстрел|теракт|протест|митинг|"
+                         r"\bсуд\b|осудил|приговор|арестова|задержа|убий|\bдтп\b|авари|пожар|матч|чемпионат|футбол|хоккей|олимпи|"
+                         r"выбор|дипломат|\bмид\b|саммит|ковид|covid|штамм|вирус|погод|пленн|экскурси|гид\b")
+
+
+def lead(title: str, text: str, n: int = 700) -> str:
+    """Заголовок и начало текста (суть новости) в нижнем регистре: проверки «о чём событие» — по ним, а не по слову в конце."""
+    return fold((title or "") + " " + (text or "")[:n])
+
+
+def business_flags(title: str, text: str) -> tuple[bool, bool]:
+    """(есть экономическая суть, некоммерческий сюжет без экономики в заголовке)."""
+    t, head = fold(title), fold((text or "")[:700])
+    econ = bool(ECON_RE.search(t) or ECON_RE.search(head))
+    return econ, bool(OFFTOPIC_RE.search(t)) and not ECON_RE.search(t)
 
 
 def is_unconfirmed(text: str) -> bool:
@@ -123,7 +166,9 @@ def rate_stance(text: str) -> str | None:
     hits = [(n, m) for n, m in (("hike", hike), ("cut", cut), ("hold", hold)) if m]
     if not hits:
         return None
-    return sorted(hits, key=lambda x: x[1].start())[0][0] if len(hits) > 1 and not hold else (("hold" if hold and not (hike or cut) else sorted(hits, key=lambda x: x[1].start())[0][0]))
+    if hold and not (hike or cut):
+        return "hold"
+    return min(hits, key=lambda x: x[1].start())[0]      # несколько формулировок — решает первая по тексту
 
 
 def fx_stance(text: str) -> str | None:
@@ -135,10 +180,6 @@ def fx_stance(text: str) -> str | None:
     if strong and not weak:
         return "rub_stronger"
     return None
-
-
-def pct_values(text: str) -> list[float]:
-    return [float(f"{a}.{b}" if b else a) for a, b in re.findall(r"(\d+)(?:[.,](\d+))?\s*%", text or "")]
 
 
 def key_rate_values(text: str) -> list[float]:
@@ -160,6 +201,27 @@ def clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, x))
 
 
+def sentence(text: str) -> str:
+    """Конец предложения без двойной точки: «… до конца 2026 г.» не превращается в «г..»."""
+    t = (text or "").rstrip()
+    return t if t.endswith((".", "!", "?", "…")) else t + "."
+
+
+def plural(n: int, forms: tuple[str, str, str]) -> str:
+    """Согласование с числом: plural(2, ("издание", "издания", "изданий")) -> «издания»."""
+    a = abs(n) % 100
+    b = a % 10
+    return forms[2 if 10 < a < 20 else 0 if b == 1 else 1 if 2 <= b <= 4 else 2]
+
+
+def ru_value(v: float | None, unit: str | None, nd: int = 1) -> str:
+    """Значение показателя с единицей: «14,0%», «87,2 руб./$», «10,2% г/г»; без единицы — только число."""
+    num, unit = ru_num(v, nd), (unit or "").strip()
+    if not unit:
+        return num
+    return num + unit if unit.startswith("%") else f"{num} {unit}"
+
+
 def short(text: str, n: int = 320) -> str:
     t = re.sub(r"\s+", " ", (text or "").strip())
     if len(t) <= n:
@@ -169,11 +231,11 @@ def short(text: str, n: int = 320) -> str:
 
 
 def days_between(a: str | None, b: str) -> float:
+    """Возраст в днях: дата публикации a (ISO, обычно UTC) берётся по московскому календарю, как и опорная дата b.
+    Иначе новость, вышедшая с 00:00 до 03:00 МСК, считалась бы на день старше."""
     if not a:
         return 9999.0
-    da = datetime.fromisoformat(a[:19]).date()
-    db = datetime.fromisoformat(b[:10]).date()
-    return float((db - da).days)
+    return float((msk_date(b[:10]) - msk_date(a)).days)
 
 
 def exp_decay(age_days: float, half_life: float) -> float:

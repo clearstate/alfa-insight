@@ -4,32 +4,34 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import re
 import tempfile
-import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import yaml
 
-from contracts.news_vocab import SCHEMA_VERSION
-
 from . import dedup, indicators as ind
-from .bankdocs import OcrUnavailable, chunk_pages, read_pdf
+from .bankdocs import OcrUnavailable, PdfBackendUnavailable, _assemble, chunk_pages, read_pdf
 from .enrich import Enricher, _BANK_MARK
 from .fetcher import FetchError, SafeFetcher
 from .html_extract import decode_bytes, extract_html
-from .llm import LLMClient
-from .models import Chunk, Extracted, IngestResult, NewsItem, PageText
-from .rss import FeedParseError, parse_feed
+from .llm import LLMClient, OpenAICompatTransport
+from .models import Chunk, Extracted, IngestResult, KeyFact, NewsItem, PageText
+from .rss import FeedEntry, FeedParseError, parse_feed
 from .store import NewsStore
 from .textutil import (clean_text, content_hash, fold, find_dates_ru, minhash, normalize_text, now_iso, parse_date, sha256_bytes,
                        shingles, split_sentences)
 
 CONFIG = Path(__file__).resolve().parent / "config"
 REPO = Path(__file__).resolve().parents[2]
+PARA = "\n\n"
+RSS_MIN_CHARS = 30          # минимум для сохранения записи ленты по заголовку/аннотации (резерв при недоступной статье)
+FEED_FULLTEXT_MIN = 500     # полный текст в самой ленте (content:encoded, rbc full-text) не короче — страницу не скачиваем
 _TRACKING = re.compile(r"^(utm_|fbclid|gclid|yclid|_openstat|ref$|from$)", re.I)
 
 
@@ -53,6 +55,39 @@ def load_sources(path: Path | None = None) -> dict[str, dict[str, Any]]:
     return {s["id"]: {**d, **s} for s in doc["sources"]}
 
 
+def build_pipeline(store: NewsStore, sources: dict[str, dict[str, Any]] | None = None) -> IngestPipeline:
+    """Конвейер с настройками из ENV — один для API (main.py) и для процесса расписания (cli schedule).
+    Сетевые параметры — из defaults в sources.yaml; NEWS_ALLOWED_DOMAINS (через запятую) сужает список доменов;
+    LLM подключается, только если задан LLM_BASE_URL."""
+    sources = sources if sources is not None else load_sources()
+    llm = LLMClient(store, OpenAICompatTransport()) if os.getenv("LLM_BASE_URL") else None
+    return IngestPipeline(store, llm=llm, fetcher=default_fetcher(sources), sources=sources)
+
+
+def default_fetcher(sources: dict[str, dict[str, Any]]) -> SafeFetcher:
+    d = next(iter(sources.values()), {})          # load_sources подмешивает defaults в каждый источник
+    doms = [x.strip() for x in os.getenv("NEWS_ALLOWED_DOMAINS", "").split(",") if x.strip()] or None
+    return SafeFetcher(timeout=d.get("timeout_s", 10), max_bytes=d.get("max_bytes", 5_000_000), retries=d.get("retries", 2),
+                       backoff=d.get("backoff_s", 1.0), min_interval=d.get("min_interval_s", 2.0),
+                       user_agent=d.get("user_agent", "AlfaInsightBot/0.1"), allowed_domains=doms)
+
+
+def _saved_from_feed(row: dict[str, Any]) -> bool:
+    """Элемент сохранён по данным ленты (аннотация/заголовок), а не по странице статьи."""
+    try:
+        return (json.loads(row["item_json"]).get("extraction") or {}).get("method") == "rss"   # rss_full — полный текст
+    except (TypeError, ValueError):
+        return False
+
+
+def _redirected_to_homepage(link: str, final_url: str | None) -> bool:
+    """Ссылка на статью привела на главную страницу сайта (статья удалена или закрыта)."""
+    if not final_url:
+        return False
+    a, b = urlparse(link), urlparse(final_url)
+    return (a.path or "/").rstrip("/") != "" and (b.path or "/").rstrip("/") == "" and not b.query
+
+
 class IngestPipeline:
     def __init__(self, store: NewsStore, *, enricher: Enricher | None = None, llm: LLMClient | None = None,
                  fetcher: SafeFetcher | None = None, sources: dict[str, dict[str, Any]] | None = None,
@@ -70,12 +105,10 @@ class IngestPipeline:
 
     def _bank_from_sidecars(self, d: Path, source_id: str) -> list[IngestResult]:
         """Если PDF-файлов рядом нет (в репозитории хранятся только экстракты) — читаем сайдкары напрямую."""
-        import json
         out = []
         for sc in sorted(d.glob("*.extract.json")):
             doc = json.loads(sc.read_text(encoding="utf-8"))
             pages = [PageText(page=x["page"], kind=x["kind"], text=x["text"]) for x in doc["pages"]]
-            from .bankdocs import _assemble
             ex = _assemble(pages, doc["document"]["title"], doc["document"].get("published_at"), "pdf_vision_sidecar")
             ex.language = doc["document"].get("language")
             ex.meta.update({"pdf_sha256": doc["source_sha256"], "source_file": doc["source_file"],
@@ -94,6 +127,9 @@ class IngestPipeline:
         def run() -> IngestResult:
             try:
                 ex = read_pdf(p, sidecar_dirs=(sidecar_dirs or [REPO / "data" / "bank_analytics"]), allow_ocr=allow_ocr)
+            except PdfBackendUnavailable as e:
+                self.store.add_error("extract", "pdf_backend_unavailable", str(e), source_id, str(p))
+                return IngestResult("failed", error=f"pdf_backend_unavailable: {e}")
             except OcrUnavailable as e:
                 self.store.add_error("extract", "ocr_unavailable", str(e), source_id, str(p))
                 return IngestResult("failed", error=f"ocr_unavailable: {e}")
@@ -103,13 +139,27 @@ class IngestPipeline:
         return self._safe(run, source_id, str(p))
 
     def ingest_html(self, source_id: str, url: str, body: bytes, content_type: str | None = None, fetched_at: str | None = None,
-                    http_status: int | None = None, charset: str | None = None, correlation_id: str | None = None) -> IngestResult:
+                    http_status: int | None = None, charset: str | None = None, correlation_id: str | None = None,
+                    feed: FeedEntry | None = None) -> IngestResult:
         def run() -> IngestResult:
             html, enc = decode_bytes(body, charset)
             ex = extract_html(html, url)
             ex.meta["encoding"] = enc
+            # запись ленты: ключ — ссылка из ленты (не адрес после редиректа), чтобы статья и резервная запись по аннотации
+            # были одним элементом: появление статьи обновляет запись (version+1), а не создаёт дубль
+            key = canonical_url(feed.link) if feed is not None and feed.link else canonical_url(url)
+            if feed is not None:                  # запись ленты: заголовок/дата/издатель ленты — резерв для страницы
+                pub = self.sources.get(source_id, {}).get("name")
+                ex.meta["feed_title"] = feed.title
+                if not ex.title and feed.title:
+                    ex.meta["feed_title_used"] = True
+                if not ex.publisher and pub and self.sources.get(source_id, {}).get("type") != "adhoc":
+                    ex.publisher = pub
+                    ex.meta["feed_publisher_used"] = True
+                if feed.published_raw:            # резерв и для пустой, и для нераспознаваемой даты страницы
+                    ex.meta["feed_published_raw"] = feed.published_raw
             return self._process(self.sources.get(source_id) or self._adhoc_source(source_id), ex, url=url,
-                                 url_key=canonical_url(url), raw_sha=sha256_bytes(body), raw_body=body,
+                                 url_key=key, raw_sha=sha256_bytes(body), raw_body=body,
                                  fetched_at=fetched_at or self.clock(), correlation_id=correlation_id,
                                  content_type=content_type, http_status=http_status)
         return self._safe(run, source_id, url, correlation_id)
@@ -131,14 +181,18 @@ class IngestPipeline:
             r = self.fetcher.fetch(url)
         except FetchError as e:
             self.store.add_error("fetch", e.code, e.message, source_id, url, correlation_id)
-            self.store.touch_source(source_id, False) if source_id in self.sources else None
+            if source_id in self.sources:
+                self.store.touch_source(source_id, False)
             return IngestResult("failed", error=f"{e.code}: {e.message}")
         if r.content_type == "application/pdf" or r.body[:5] == b"%PDF-":
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tf:
                 tf.write(r.body)
-            res = self.ingest_bank_pdf(tf.name, source_id) if source_id == "alfa_bank_analytics" else self._ingest_pdf_generic(tf.name, url, source_id, r)
-            Path(tf.name).unlink(missing_ok=True)
-            return res
+            try:
+                if source_id == "alfa_bank_analytics":
+                    return self.ingest_bank_pdf(tf.name, source_id)
+                return self._ingest_pdf_generic(tf.name, url, source_id, r)
+            finally:
+                Path(tf.name).unlink(missing_ok=True)
         if r.content_type in ("application/rss+xml", "application/atom+xml", "application/xml", "text/xml") or r.body.lstrip()[:5] == b"<?xml":
             return self.ingest_feed_bytes(source_id, r.body, url)
         return self.ingest_html(source_id, r.final_url, r.body, r.content_type, r.fetched_at, r.status, r.charset, correlation_id)
@@ -184,7 +238,8 @@ class IngestPipeline:
             self.store.add_error("fetch_feed", e.code, e.message, source_id, src["url"])
             self.store.touch_source(source_id, False)
             return [IngestResult("failed", error=f"{e.code}: {e.message}")]
-        return self.ingest_feed_bytes(source_id, r.body, src["url"], fetch_articles)
+        # fetch_articles: false в sources.yaml — сайт не отдаёт страницы ботам (403) или лента уже содержит текст
+        return self.ingest_feed_bytes(source_id, r.body, src["url"], fetch_articles and src.get("fetch_articles", True))
 
     def ingest_feed_bytes(self, source_id: str, body: bytes, base_url: str, fetch_articles: bool = True) -> list[IngestResult]:
         try:
@@ -195,30 +250,118 @@ class IngestPipeline:
         results = []
         for e in entries:
             try:
-                if e.link and fetch_articles and self.fetcher is not None:
-                    try:
-                        r = self.fetcher.fetch(e.link)
-                    except FetchError as fe:      # отказ одной статьи не останавливает ленту
-                        self.store.add_error("fetch", fe.code, fe.message, source_id, e.link)
-                        results.append(IngestResult("failed", error=f"{fe.code}: {fe.message}"))
-                        continue
-                    res = self.ingest_html(source_id, r.final_url, r.body, r.content_type, r.fetched_at, r.status, r.charset)
-                    if res.outcome in ("created", "updated") and not res.reasons.count("feed_date_used"):
-                        pass
-                else:
-                    res = self._safe(lambda e=e: self._process(
-                        self.sources.get(source_id) or self._adhoc_source(source_id),
-                        Extracted(title=e.title, text=e.summary or "", published_raw=e.published_raw, url=e.link, method="rss",
-                                  meta={"summary_only": True}),
-                        url=e.link, url_key=canonical_url(e.link) if e.link else "rss:" + (e.guid or content_hash(e.title or "")[:24]),
-                        raw_sha=sha256_bytes((e.summary or e.title or "").encode()), raw_body=None, fetched_at=self.clock(),
-                        correlation_id=None, content_type="application/rss+xml"), source_id, e.link)
+                res = self._feed_entry(source_id, e, fetch_articles)
                 results.append(res)
             except Exception as ex:   # noqa: BLE001 — лента продолжает работу
                 self.store.add_error("feed_entry", "unexpected", repr(ex), source_id, e.link)
                 results.append(IngestResult("failed", error=repr(ex)))
         self.store.touch_source(source_id, any(r.outcome != "failed" for r in results) if results else True)
         return results
+
+    def _feed_entry(self, source_id: str, e: FeedEntry, fetch_articles: bool) -> IngestResult:
+        """Одна запись ленты. Порядок: статья целиком -> резервные данные RSS.
+
+        Резерв: если страница статьи недоступна (4xx/5xx, robots, сеть) или из неё не извлекается полноценный текст
+        (видео-заглушка, редирект на главную, слишком короткий текст), материал сохраняется по описанию из RSS
+        (summary_only) с датой, заголовком и издателем из ленты. Дата из RSS также дополняет страницу, опубликованную без даты.
+        Причины фиксируются в status_reasons: rss_fallback, feed_date_used, feed_title_used, feed_publisher_used.
+        """
+        cfg = self.sources.get(source_id) or {"id": source_id, "type": "adhoc", "name": source_id}
+        pub = cfg.get("name") if cfg.get("type") != "adhoc" else None
+        prev = self.store.get_by_url_key(canonical_url(e.link)) if e.link else None
+        if prev and not _saved_from_feed(prev):
+            # статья уже сохранена целиком: ленту опрашивают по расписанию, повторно страницу не скачиваем и не
+            # заменяем полный текст аннотацией, если статья временно недоступна
+            self.store.touch_seen(prev["id"])
+            return IngestResult("skipped", prev["id"], prev["version"], prev["processing_status"], prev["dup_of"],
+                                prev["event_cluster_id"], reasons=["already_ingested"])
+        full = normalize_text(e.content or "")
+        if len(full) >= FEED_FULLTEXT_MIN:
+            # лента отдаёт полный текст статьи: это полноценный материал, страницу не скачиваем
+            ex = Extracted(title=e.title or None, text=full, published_raw=e.published_raw, url=e.link, method="rss_full",
+                           publisher=pub, meta={"feed_title": e.title, "feed_published_raw": e.published_raw})
+            return self._process_feed_item(source_id, cfg, ex, e)
+        art_ex = None
+        failed: str | None = None
+        if e.link and fetch_articles and self.fetcher is not None:
+            try:
+                r = self.fetcher.fetch(e.link)
+            except FetchError as fe:
+                self.store.add_error("fetch", fe.code, fe.message, source_id, e.link)
+                failed = f"fetch:{fe.code}"
+            else:
+                if _redirected_to_homepage(e.link, r.final_url):
+                    # главная страница вместо статьи (статья удалена/закрыта): её текст — не текст новости
+                    self.store.add_error("feed_entry", "redirect_to_homepage", f"{e.link} -> {r.final_url}", source_id, e.link)
+                    failed = "article:redirect_to_homepage"
+                elif r.content_type == "application/pdf" or r.body[:5] == b"%PDF-":
+                    try:
+                        art_ex = self._pdf_from_bytes(r.body)
+                    except (OcrUnavailable, PdfBackendUnavailable) as ex:  # PDF без текста/OCR: действует резерв RSS
+                        self.store.add_error("extract", "ocr_unavailable" if isinstance(ex, OcrUnavailable) else "pdf_backend_unavailable",
+                                             str(ex), source_id, e.link)
+                        failed = "extract:pdf_failed"
+                    except Exception as ex:  # noqa: BLE001 — битый PDF: действует резерв RSS
+                        self.store.add_error("extract", "pdf_failed", f"{type(ex).__name__}: {ex}", source_id, e.link)
+                        failed = "extract:pdf_failed"
+                    else:
+                        # PDF-документ по ссылке из ленты — полноценный материал. Заголовок ленты точнее метаданных PDF
+                        # (там часто «Microsoft Word - …»); дата и издатель ленты — резерв
+                        art_ex.url, art_ex.title = e.link, e.title or art_ex.title
+                        art_ex.publisher = art_ex.publisher or pub
+                        art_ex.meta.update({"feed_title": e.title, "feed_published_raw": e.published_raw})
+                        res = self._process_feed_item(source_id, cfg, art_ex, e, "application/pdf")
+                        if res.outcome != "failed":
+                            return res
+                        failed = f"article:{res.error or 'failed'}"
+                else:
+                    # заголовок/издатель/дата ленты — резерв для страницы без этих полей (ingest_html)
+                    res = self.ingest_html(source_id, r.final_url, r.body, r.content_type, r.fetched_at, r.status, r.charset, feed=e)
+                    if res.outcome != "failed":
+                        return res
+                    art_ex = extract_html(decode_bytes(r.body, r.charset)[0], r.final_url)
+                    self.store.add_error("feed_entry", "article_rejected", res.error or "failed", source_id, e.link)
+                    failed = f"article:{res.error or 'failed'}"
+
+        summary = normalize_text(e.summary or "")
+        title = normalize_text(e.title or "")
+        text = summary
+        if failed is not None and art_ex is not None and art_ex.text and len(text) < 60:
+            # аннотации нет или она короткая: добавляем абзацы отклонённой (слишком короткой) страницы
+            extra = [p for p in normalize_text(art_ex.text).split(PARA) if len(p) >= 60 and fold(p) not in fold(summary)]
+            text = normalize_text(PARA.join(([text] if text else []) + extra))
+        if len(text) < 60 and title and fold(text) not in fold(title):
+            text = normalize_text(title + PARA + text) if text else title   # короткая аннотация дополняется заголовком
+        elif not text:
+            text = title
+        title_only = bool(text) and text == title
+        if len(text) < RSS_MIN_CHARS or (title_only and not e.link):
+            # резервных данных нет (ни аннотации, ни осмысленного заголовка со ссылкой)
+            if failed is None:   # причина отказа страницы уже в журнале; иначе фиксируем здесь
+                self.store.add_error("feed_entry", "no_rss_fallback", "в записи ленты нет текста для сохранения", source_id, e.link)
+            return IngestResult("failed", error=failed or "empty_entry", reasons=["no_rss_fallback"])
+        ex = Extracted(title=e.title or None, text=text, published_raw=e.published_raw, url=e.link, method="rss", publisher=pub,
+                       language=getattr(art_ex, "language", None) if art_ex else None,
+                       meta={"summary_only": True, "rss_fallback": failed or "no_article", "feed_title": e.title,
+                             "feed_published_raw": e.published_raw, "title_only": title_only})
+        return self._process_feed_item(source_id, cfg, ex, e)
+
+    def _process_feed_item(self, source_id: str, cfg: dict[str, Any], ex: Extracted, e: FeedEntry,
+                           content_type: str = "application/rss+xml") -> IngestResult:
+        url_key = canonical_url(e.link) if e.link else "rss:" + (e.guid or content_hash(e.title or "")[:24])
+        return self._safe(lambda: self._process(cfg, ex, url=e.link, url_key=url_key,
+                                                raw_sha=sha256_bytes((ex.text or e.title or "").encode()), raw_body=None,
+                                                fetched_at=self.clock(), correlation_id=None, content_type=content_type),
+                          source_id, e.link)
+
+    @staticmethod
+    def _pdf_from_bytes(body: bytes) -> Extracted:
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tf:
+            tf.write(body)
+        try:
+            return read_pdf(tf.name, sidecar_dirs=[])
+        finally:
+            Path(tf.name).unlink(missing_ok=True)
 
     # ------------------------------------------------------------------ служебное
     def _adhoc_source(self, source_id: str) -> dict[str, Any]:
@@ -256,7 +399,8 @@ class IngestPipeline:
             pages, text = None, normalize_text(ex.text)
         title = normalize_text(ex.title or "")
         # 3. валидация
-        min_chars = 60 if (ex.meta.get("summary_only") or ex.method == "manual_text") else 200
+        # запись ленты (rss) может состоять из заголовка и короткой аннотации — она уходит в needs_review, а не теряется
+        min_chars = RSS_MIN_CHARS if ex.method == "rss" else 60 if (ex.meta.get("summary_only") or ex.method == "manual_text") else 200
         if not text.strip():
             self.store.add_error("validate", "empty_content", "нет извлечённого текста", sid, url, correlation_id)
             return IngestResult("failed", error="empty_content", reasons=["empty_content"])
@@ -265,18 +409,42 @@ class IngestPipeline:
             return IngestResult("failed", error="text_too_short", reasons=["text_too_short"])
         if ex.meta.get("summary_only"):
             reasons.append("summary_only")
+        feed_title = normalize_text(ex.meta.get("feed_title") or "")
+        if not title or (ex.meta.get("feed_title_used") and feed_title):
+            title = feed_title or title
         if not title:
             sents = split_sentences(text)
-            title = (sents[0][0] if sents else text)[:120].rstrip(" .,;:") 
+            title = (sents[0][0] if sents else text)[:120].rstrip(" .,;:")
             reasons.append("title_derived")
             status = "needs_review"
-        parsed = parse_date(ex.published_raw)
-        published_at, precision = parsed if parsed else (None, None)
+        elif ex.meta.get("feed_title_used"):
+            reasons.append("feed_title_used")
         now = self.clock()
-        if published_at is None:
-            reasons.append("date_missing"); status = "needs_review"
-        elif published_at > (datetime.fromisoformat(now.replace("Z", "+00:00")) + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S+00:00"):
+        horizon = (datetime.fromisoformat(now.replace("Z", "+00:00")) + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        # дата страницы; для записи, сохранённой по данным ленты (method=rss), страницы нет — дата всегда из RSS
+        from_feed = ex.method in ("rss", "rss_full")
+        page_date = None if from_feed else parse_date(ex.published_raw)
+        feed_date = None if is_bank else parse_date(ex.meta.get("feed_published_raw")
+                                                    or (ex.published_raw if from_feed else None))
+        dated = page_date or feed_date
+        feed_date_used = page_date is None and feed_date is not None
+        if dated and dated[0] > horizon:
             reasons.append("date_in_future"); status = "needs_review"
+            published_at, precision = dated
+        elif dated:
+            published_at, precision = dated
+        else:
+            published_at, precision = None, None
+            reasons.append("date_missing"); status = "needs_review"
+        if feed_date_used:
+            # дата страницы пустая/битая, дата взята из RSS (для сохранения по аннотации это всегда так)
+            reasons.append("feed_date_used")
+        if ex.meta.get("feed_publisher_used"):
+            reasons.append("feed_publisher_used")
+        if ex.meta.get("rss_fallback"):
+            reasons.append("rss_fallback")
+        if ex.meta.get("summary_only") and status == "ok":
+            status = "needs_review"     # сохранён по аннотации RSS: материал неполный, виден в очереди проверки
         # дата события
         event_date = None
         bank_meta = dict(ex.meta.get("bank") or {})
@@ -303,7 +471,7 @@ class IngestPipeline:
             sent_pages = [(p.page, p.text, offs[p.page]) for p in pages if p.page in offs and p.kind in ("text", "mixed")]
         else:
             sent_pages = [(None, text, 0)]
-        facts, views = en.analyse_sentences(sent_pages, is_bank, 14 if is_bank else 8, topics or list(en.topic_re)[:0])
+        facts, views = en.analyse_sentences(sent_pages, is_bank, 14 if is_bank else 8, topics)
         nclaims = en.numeric_claims(sent_pages, is_bank)
         flags = en.injection_flags(title + "\n" + text)
         if flags:
@@ -311,16 +479,21 @@ class IngestPipeline:
 
         # 5. LLM поверх правил (только если правила не справились)
         usage: dict[str, int] = {}
-        if self.llm and not is_bank and (not topics or len(facts) < 2):
+        # Модель — только когда правила не справились: нет тем или мало фактов в полном тексте. Для записи ленты по аннотации
+        # (2–3 предложения) факты модель всё равно может взять только из них — зовём её лишь при отсутствии тем.
+        # Текст с инструкциями для AI (prompt injection) модели не отдаётся.
+        need_llm = not topics or (len(facts) < 2 and not ex.meta.get("summary_only"))
+        if self.llm and not is_bank and not flags and need_llm:
             res, why = self.llm.enrich(title, text)
             if res is None:
                 reasons.append(f"llm_skipped:{why}")
             else:
                 usage = dict(self.llm.last_usage)
+                if res["topics"] or res["key_facts"]:
+                    reasons.append("llm_enriched")       # темы/факты от модели: база знаний сохраняет их при пересчёте тем правилами
                 for t in res["topics"]:
                     if t not in topics:
                         topics.append(t); tscores[t] = 0.3
-                from .models import KeyFact
                 for f in res["key_facts"]:
                     pos = text.find(f)
                     if pos >= 0 and not any(f in x.text or x.text in f for x in facts):
@@ -349,7 +522,8 @@ class IngestPipeline:
             bank_views=views, numeric_claims=nclaims, source_reliability=rel, provenance=provenance, processing_status=status,
             status_reasons=reasons, security_flags=flags,
             extraction={"method": ex.method, **{k: v for k, v in ex.meta.items() if k in (
-                "page_count", "skipped_pages", "sidecar", "extraction_note", "encoding", "pdf_sha256", "source_file", "summary_only")}},
+                "page_count", "skipped_pages", "sidecar", "extraction_note", "encoding", "pdf_sha256", "source_file", "summary_only",
+                "title_only", "rss_fallback")}},
             bank=({"author_unit": bank_meta.get("author_unit"), "doc_family": bank_meta.get("doc_family"), "stale": stale,
                    "stale_reason": bank_meta.get("stale_reason"), "superseded_note": bank_meta.get("superseded_note"),
                    "published_at_note": bank_meta.get("published_at_note"), "case_list_title": bank_meta.get("case_list_title"),
@@ -396,8 +570,7 @@ class IngestPipeline:
                     if p.kind in ("text", "mixed", "table", "chart"):
                         inds += ind.parse_tables(p.text, item_id, p.page, published_at)
             else:
-                from .bankdocs import chunk_pages as cp
-                chunks = cp(item_id, [PageText(1, "text", text)], topic_fn)
+                chunks = chunk_pages(item_id, [PageText(1, "text", text)], topic_fn)
                 for c in chunks:
                     c.page = None
         item.chunk_count = len(chunks)
@@ -407,7 +580,6 @@ class IngestPipeline:
             cid = item.event_cluster_id
             members = self.store.cluster_members(cid)
             conflicts = dedup.compute_conflicts(members) if len(members) > 1 else []
-            n_real = len([m for m in members if not m["dup_of"]])
             self.store.upsert_cluster(cid, title[:200], event_date, len(members), conflicts)
             if conflicts and dec.kind == "same_event":
                 item.status_reasons.append("cluster_conflict")
@@ -417,4 +589,4 @@ class IngestPipeline:
             self.store.touch_source(sid, True)
         outcome = {"new": "created", "same_event": "created", "update": "updated", "duplicate": "duplicate"}[dec.kind]
         return IngestResult(outcome, item_id, item.version, item.processing_status, item.dup_of, item.event_cluster_id,
-                            reasons=item.status_reasons, token_usage=usage)
+                            reasons=list(item.status_reasons), token_usage=usage)

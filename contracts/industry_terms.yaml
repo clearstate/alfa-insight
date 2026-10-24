@@ -250,7 +250,6 @@ entries:
   - автомобил
   - автодилер
   - авторынок
-  - автозапчаст
   okved_prefixes:
   - prefix: '29'
     verified: data
@@ -261,6 +260,25 @@ entries:
     example_okved: 45.1 Торговля автотранспортными средствами
     companies_in_data: 2661
   industry_rule: auto
+- id: auto_parts
+  terms:
+  - автозапчаст
+  - автокомпонент
+  - автомобильн комплектующ
+  okved_prefixes:
+  - prefix: '45.3'
+    verified: data
+    example_okved: 45.3 Торговля автомобильными деталями, узлами и принадлежностями
+    companies_in_data: 1010
+  - prefix: '29.3'
+    verified: data
+    example_okved: 29.32 Производство прочих комплектующих и принадлежностей для автотранспортных средств
+    companies_in_data: 40
+  industry_rule: auto
+  ambiguous_terms:
+  - запчаст
+  - комплектующ
+  note: «запчасти» и «комплектующие» без указания на автомобили бывают и для станков, и для самолётов — отрасль не задают
 - id: road_freight_logistics
   terms:
   - грузоперевоз

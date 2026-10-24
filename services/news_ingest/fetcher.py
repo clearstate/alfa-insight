@@ -15,8 +15,13 @@ import urllib.robotparser
 from dataclasses import dataclass, field
 from urllib.parse import urljoin, urlparse
 
+from .textutil import now_iso
+
 ALLOWED_CT = ("text/html", "application/xhtml", "application/rss+xml", "application/atom+xml", "application/xml", "text/xml",
               "text/plain", "application/pdf", "application/json")
+# robots.txt перечитывается: правила сайта меняются, а временная ошибка (5xx/сеть) не должна блокировать источник навсегда
+ROBOTS_TTL_S = 6 * 3600
+ROBOTS_ERROR_TTL_S = 10 * 60
 
 
 class FetchError(Exception):
@@ -61,8 +66,8 @@ def check_url(url: str, allow_private: bool = False, allowed_domains: list[str] 
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D401
-        return None
+    def redirect_request(self, *args, **kwargs):
+        return None        # редиректы обрабатывает SafeFetcher: каждый новый адрес проходит check_url
 
 
 class SafeFetcher:
@@ -76,25 +81,27 @@ class SafeFetcher:
         self.respect_robots, self.max_redirects = respect_robots, max_redirects
         self._sleep, self._clock = sleep, clock
         self._last: dict[str, float] = {}
-        self._robots: dict[str, urllib.robotparser.RobotFileParser | None] = {}
+        self._robots: dict[str, tuple[float, urllib.robotparser.RobotFileParser | None]] = {}   # origin -> (истекает, правила)
         self._opener = urllib.request.build_opener(_NoRedirect)
 
     # ---- robots.txt ----
     def robots_allowed(self, url: str) -> bool:
         p = urlparse(url)
         origin = f"{p.scheme}://{p.netloc}"
-        if origin not in self._robots:
-            rp = urllib.robotparser.RobotFileParser()
+        cached = self._robots.get(origin)
+        if cached is None or self._clock() >= cached[0]:
+            rp: urllib.robotparser.RobotFileParser | None = urllib.robotparser.RobotFileParser()
+            ttl = ROBOTS_TTL_S
             try:
-                r = self._get_once(origin + "/robots.txt", max_bytes=500_000, check_ct=False)
+                r = self._get_with_redirects(origin + "/robots.txt", max_bytes=500_000, check_ct=False)
                 rp.parse(r.body.decode("utf-8", "replace").splitlines())
-                self._robots[origin] = rp
             except FetchError as e:
-                # 4xx (нет robots.txt) -> разрешено; недоступность/5xx -> консервативно запрещено
-                self._robots[origin] = None if (e.status is None or e.status >= 500) else urllib.robotparser.RobotFileParser()
-                if self._robots[origin] is not None:
-                    self._robots[origin].parse([])
-        rp = self._robots[origin]
+                if e.status is None or e.status >= 500:
+                    rp, ttl = None, ROBOTS_ERROR_TTL_S      # недоступен/5xx -> консервативно запрещено, повтор через 10 минут
+                else:
+                    rp.parse([])                            # 4xx (нет robots.txt) -> разрешено
+            cached = self._robots[origin] = (self._clock() + ttl, rp)
+        rp = cached[1]
         return bool(rp and rp.can_fetch(self.user_agent, url))
 
     # ---- основной вызов ----
@@ -112,10 +119,10 @@ class SafeFetcher:
                 self._sleep(self.backoff * (2 ** attempt))
                 attempt += 1
 
-    def _get_with_redirects(self, url: str) -> FetchResult:
+    def _get_with_redirects(self, url: str, **kw) -> FetchResult:
         cur = url
         for _ in range(self.max_redirects + 1):
-            r = self._get_once(cur)
+            r = self._get_once(cur, **kw)
             if r.status in (301, 302, 303, 307, 308):
                 loc = r.headers.get("location")
                 if not loc:
@@ -148,9 +155,9 @@ class SafeFetcher:
                 ra = e.headers.get("Retry-After")
                 if ra and ra.isdigit():
                     self._sleep(min(int(ra), 30))
-            raise FetchError(f"http_{e.code}", f"{url}", retryable=retry, status=e.code)
-        except (urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError, OSError) as e:
-            raise FetchError("network_error", f"{url}: {e}", retryable=True)
+            raise FetchError(f"http_{e.code}", url, retryable=retry, status=e.code) from e
+        except OSError as e:          # URLError, таймаут, обрыв соединения
+            raise FetchError("network_error", f"{url}: {e}", retryable=True) from e
         with resp:
             ct_full = resp.headers.get("Content-Type", "") or ""
             ct = ct_full.split(";")[0].strip().lower()
@@ -171,6 +178,5 @@ class SafeFetcher:
             charset = None
             if "charset=" in ct_full.lower():
                 charset = ct_full.lower().split("charset=")[1].split(";")[0].strip().strip('"')
-            from .textutil import now_iso
             return FetchResult(url, url, resp.status, ct, charset, b"".join(chunks),
                                {k.lower(): v for k, v in resp.headers.items()}, now_iso())

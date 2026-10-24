@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-alfa_insight}
       POSTGRES_USER: ${POSTGRES_USER:-alfa}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    ports: ["127.0.0.1:${POSTGRES_PORT:-5432}:5432"]   # только локально: БД не публикуется в сеть
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -34,7 +34,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-alfa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-alfa_insight}
       COMPANY_PROFILE_DEMO_ENDPOINTS: ${COMPANY_PROFILE_DEMO_ENDPOINTS:-1}
-    ports: ["${COMPANY_PROFILE_PORT:-8001}:8001"]
+    ports: ["${COMPANY_PROFILE_BIND:-127.0.0.1}:${COMPANY_PROFILE_PORT:-8001}:8001"]   # наружу — только через reverse-proxy
     depends_on:
       company-profile-etl: {condition: service_completed_successfully}
     healthcheck:
@@ -48,7 +48,7 @@ services:
     profiles: ["test"]
     image: postgres:16-alpine
     environment: {POSTGRES_DB: cp_test, POSTGRES_USER: cp, POSTGRES_PASSWORD: cp}
-    ports: ["5433:5432"]
+    ports: ["127.0.0.1:5433:5432"]
     tmpfs: [/var/lib/postgresql/data]
 
 volumes:

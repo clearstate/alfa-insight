@@ -27,3 +27,13 @@ package = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[tool.ruff]
+target-version = "py312"
+extend-exclude = ["frontend", "data"]
+
+[tool.ruff.lint]
+# Ошибки, а не стиль: pyflakes (неиспользуемое, неопределённые имена), синтаксис, bugbear (замыкания в циклах, assert False и т.п.).
+# B008 — Depends()/Query() в аргументах FastAPI; B904/B905 — raise без from и zip без strict, приняты в кодовой базе.
+select = ["F", "E9", "B"]
+ignore = ["B008", "B904", "B905"]

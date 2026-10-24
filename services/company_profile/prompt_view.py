@@ -32,7 +32,7 @@ def build_prompt_view(profile: dict) -> dict:
         "region": profile["geography"]["region"]["value"],
         "size": {
             "revenue_magnitude": _magnitude(size["revenue"]["value"]),
-            "revenue_unit": "unknown (assumed RUB)",
+            "revenue_unit": "RUB, 2025",
             "is_large_business": size["is_large_business"]["value"],
             "workers_fns": size["workers_fns"]["value"],
             "company_age": size["company_age"]["value"],

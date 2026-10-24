@@ -4,34 +4,39 @@
   ingest-bank [--dir D]            загрузить 9 документов банка (сайдкары/PDF) — первая вертикаль
   import-file PATH [--title T] [--published-at D] [--source S]   импорт файла (.pdf/.html/.txt) — когда источник недоступен по сети
   ingest-url URL                   загрузить страницу/ленту/PDF по URL (robots, SSRF-защита)
-  ingest-feed SOURCE_ID            обойти ленту из sources.yaml (cron: раз в N минут)
+  ingest-feed SOURCE_ID            обойти ленту из sources.yaml (прогон пишется в source_runs)
+  schedule [--loop] [--tick S]     обойти «созревшие» включённые ленты (interval_min); --loop — постоянный процесс
+  freshness                        свежесть источников (последний успешный прогон); код возврата 1, если просрочено
   export --out DIR                 выгрузка для участников 3/4/6 (items.jsonl, chunks.jsonl, indicators*.json, clusters.json)
   verify-sources                   проверка URL источников (robots.txt, доступность, формат) — запускать на машине с сетью
+  gen-token USER_ID                новый токен API (NEWS_STANDALONE_AUTH=token): токен — пользователю, хеш — в NEWS_API_TOKENS
   stats | metrics | errors [--limit N]
 """
 from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
+import signal
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from . import indicators as ind
+from . import scheduler
+from .auth_shim import new_token
 from .fetcher import FetchError, SafeFetcher
-from .pipeline import IngestPipeline, load_sources
+from .pipeline import IngestPipeline, build_pipeline, load_sources
 from .rss import FeedParseError, parse_feed
 from .store import NewsStore
+from .textutil import now_iso
 
 
 def _pipe(args) -> tuple[NewsStore, IngestPipeline]:
     store = NewsStore(args.db)
     store.init_schema()
-    src = load_sources()
-    d = next(iter(src.values()))
-    f = SafeFetcher(timeout=d.get("timeout_s", 10), max_bytes=d.get("max_bytes", 5_000_000), retries=d.get("retries", 2),
-                    backoff=d.get("backoff_s", 1.0), min_interval=d.get("min_interval_s", 2.0), user_agent=d.get("user_agent", "AlfaInsightBot/0.1"))
-    return store, IngestPipeline(store, fetcher=f, sources=src)
+    return store, build_pipeline(store)
 
 
 def _dump(path: Path, obj) -> None:
@@ -66,7 +71,7 @@ def metrics(store: NewsStore) -> dict:
     errs = {r["code"]: r["n"] for r in q("SELECT code, COUNT(*) n FROM pipeline_errors GROUP BY code")}
     n_err = sum(errs.values())
     llm = q("SELECT COALESCE(SUM(tokens_in+tokens_out),0) tok, COALESCE(SUM(cached),0) cached, COUNT(*) calls FROM llm_usage")[0]
-    from datetime import datetime
+    llm = {k: int(v) for k, v in llm.items()}       # PostgreSQL: SUM(bigint) -> numeric (Decimal), не сериализуется в JSON
     lags = [(datetime.fromisoformat(r["retrieved_at"]) - datetime.fromisoformat(r["published_at"])).total_seconds() / 3600
             for r in q("SELECT published_at, retrieved_at FROM news_items WHERE published_at IS NOT NULL AND source_type<>'bank_analytics'")]
     lag = sum(lags) / len(lags) if lags else None
@@ -82,7 +87,7 @@ def metrics(store: NewsStore) -> dict:
         "clusters_with_conflicts": q("SELECT COUNT(*) n FROM event_clusters WHERE COALESCE(conflicts,'[]')<>'[]'")[0]["n"],
         "llm_tokens_total": llm["tok"], "llm_calls": llm["calls"],
         "llm_cache_hit_rate": round(llm["cached"] / llm["calls"], 4) if llm["calls"] else None,
-        "llm_tokens_today": store.llm_tokens_today(__import__("services.news_ingest.textutil", fromlist=["now_iso"]).now_iso()[:10]),
+        "llm_tokens_today": store.llm_tokens_today(now_iso()[:10]),
     }
 
 
@@ -114,11 +119,23 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("import-file"); p.add_argument("path"); p.add_argument("--title"); p.add_argument("--published-at"); p.add_argument("--source", default="manual_file")
     p = sub.add_parser("ingest-url"); p.add_argument("url")
     p = sub.add_parser("ingest-feed"); p.add_argument("source_id")
+    p = sub.add_parser("schedule"); p.add_argument("--loop", action="store_true"); p.add_argument("--tick", type=float, default=60.0)
+    sub.add_parser("freshness")
     p = sub.add_parser("export"); p.add_argument("--out", required=True)
     sub.add_parser("verify-sources"); sub.add_parser("stats"); sub.add_parser("metrics")
+    p = sub.add_parser("gen-token"); p.add_argument("user_id")
     p = sub.add_parser("errors"); p.add_argument("--limit", type=int, default=20)
     args = ap.parse_args(argv)
 
+    if args.cmd == "gen-token":
+        try:
+            token, entry = new_token(args.user_id)
+        except ValueError as e:
+            print(str(e), file=sys.stderr); return 2
+        print(json.dumps({"token": token, "news_api_tokens_entry": entry,
+                          "note": "токен показывается один раз; в NEWS_API_TOKENS добавить только news_api_tokens_entry"},
+                         ensure_ascii=False, indent=1))
+        return 0
     if args.cmd == "verify-sources":
         print(json.dumps(verify_sources(load_sources()), ensure_ascii=False, indent=1)); return 0
     store, pipe = _pipe(args)
@@ -131,7 +148,24 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "ingest-url":
         r = pipe.ingest_url(args.url); res = r if isinstance(r, list) else [r]
     elif args.cmd == "ingest-feed":
-        res = pipe.ingest_feed(args.source_id)
+        if args.source_id not in pipe.sources:
+            print(f"неизвестный источник: {args.source_id}", file=sys.stderr); return 2
+        _, res = scheduler.run_source_detailed(pipe, args.source_id)
+    elif args.cmd == "schedule":
+        if not args.loop:
+            runs = scheduler.run_due(pipe)
+            print(json.dumps(runs, ensure_ascii=False, indent=1))
+            return 0 if all(r["ok"] for r in runs) else 1
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+        stop = {"flag": False}
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            signal.signal(sig, lambda *_: stop.__setitem__("flag", True))
+        scheduler.loop(pipe, tick_s=args.tick, should_stop=lambda: stop["flag"])
+        return 0
+    elif args.cmd == "freshness":
+        rep = scheduler.freshness(store, pipe.sources, pipe.clock())
+        print(json.dumps(rep, ensure_ascii=False, indent=1))
+        return 0 if rep["status"] == "ok" else 1
     elif args.cmd == "export":
         print(json.dumps(export(store, Path(args.out)), ensure_ascii=False)); return 0
     elif args.cmd == "metrics":
