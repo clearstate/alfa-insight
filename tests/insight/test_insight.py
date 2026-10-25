@@ -168,6 +168,231 @@ def test_llm_rewrite_accepts_grounded_and_rejects_hallucinated_numbers():
     assert llm.calls["rejected"] >= 1 and ins["checks"]["passed"]
 
 
+def test_verify_rejects_transport_cost_claim_supported_only_by_fuel_price():
+    from services.insight.agent import InsightAgent
+    from services.insight.evidence import EvidenceBook
+
+    base = svc()
+    agent = InsightAgent(base.kb, base.dir, base.ranker, None, base.s)
+
+    item = {
+        "id": "fuel-only",
+        "title": "Изменение цен на топливо",
+        "text": "За неделю бензин подорожал на 0,91%.",
+        "kind": "news",
+        "unconfirmed": False,
+        "stale": False,
+        "injection": False,
+    }
+
+    ev = EvidenceBook()
+    fuel_eid = ev.news(item, item["text"])
+
+    profile = base.dir.profile("U_212593")
+    insight = {
+        "consequences": {
+            "risks": [{
+                "index": 0,
+                "title": "Транспорт и доставка дорожают",
+                "text": "Стоимость перевозок компании выросла.",
+                "evidence": [fuel_eid],
+                "hypothesis": False,
+                "lens": "sector:logistics_cost",
+            }],
+            "opportunities": [],
+            "notes": [],
+        },
+        "what_happened": {"key_facts": []},
+        "bank_view": {"indicators": []},
+        "confidence": "high",
+        "data_gaps": [],
+    }
+
+    checks = agent.verify(insight, ev, item, profile)
+    assert any(c["code"] == "semantic_grounding" and c["status"] == "fail"
+               for c in checks), checks
+
+
+def test_adapt_removes_transport_claim_supported_only_by_fuel_price():
+    from services.insight.agent import InsightAgent, Trace
+    from services.insight.lenses import Ctx
+    from services.insight.evidence import EvidenceBook
+
+    base = svc()
+    agent = InsightAgent(base.kb, base.dir, base.ranker, None, base.s)
+
+    item = {
+        "id": "fuel-only",
+        "title": "Изменение цен на топливо",
+        "text": "За неделю бензин подорожал на 0,91%.",
+        "kind": "news",
+        "unconfirmed": False,
+        "stale": False,
+        "injection": False,
+    }
+
+    ev = EvidenceBook()
+    fuel_eid = ev.news(item, item["text"])
+
+    finding = {
+        "index": 0,
+        "title": "Транспорт и доставка дорожают",
+        "text": "Стоимость перевозок компании выросла.",
+        "evidence": [fuel_eid],
+        "hypothesis": False,
+        "lens": "sector:logistics_cost",
+    }
+
+    insight = {
+        "consequences": {
+            "risks": [finding.copy()],
+            "opportunities": [],
+            "notes": [],
+        },
+        "confidence": "high",
+        "data_gaps": [],
+    }
+
+    failed = [{
+        "code": "semantic_grounding",
+        "status": "fail",
+        "detail": "Рост транспортных расходов не подтверждён.",
+    }]
+
+    profile = base.dir.profile("U_212593")
+
+    ctx = Ctx(
+        kb=base.kb,
+        directory=base.dir,
+        company_id=profile["company_id"],
+        role="CEO",
+        item=item,
+        profile=profile,
+        ev=ev,
+        topics={},
+    )
+
+    agent._adapt(insight, failed, ctx, ev, item, Trace())
+
+    assert insight["consequences"]["risks"] == []
+    assert insight["confidence"] == "low"
+    assert insight["data_gaps"]
+
+def test_adapt_removes_hypothetical_transport_claim_supported_only_by_fuel_price():
+    from services.insight.agent import InsightAgent, Trace
+    from services.insight.lenses import Ctx
+    from services.insight.evidence import EvidenceBook
+
+    base = svc()
+    agent = InsightAgent(base.kb, base.dir, base.ranker, None, base.s)
+
+    item = {
+        "id": "fuel-only",
+        "title": "Изменение цен на топливо",
+        "text": "За неделю бензин подорожал на 0,91%.",
+        "kind": "news",
+        "unconfirmed": False,
+        "stale": False,
+        "injection": False,
+    }
+
+    ev = EvidenceBook()
+    fuel_eid = ev.news(item, item["text"])
+
+    finding = {
+        "index": 0,
+        "title": "Транспорт и доставка дорожают",
+        "text": "Стоимость перевозок компании выросла.",
+        "evidence": [fuel_eid],
+        "hypothesis": True,
+        "lens": "sector:logistics_cost",
+    }
+
+    insight = {
+        "consequences": {
+            "risks": [finding.copy()],
+            "opportunities": [],
+            "notes": [],
+        },
+        "confidence": "high",
+        "data_gaps": [],
+    }
+
+    failed = [{
+        "code": "semantic_grounding",
+        "status": "fail",
+        "detail": "Рост транспортных расходов не подтверждён.",
+    }]
+
+    profile = base.dir.profile("U_212593")
+
+    ctx = Ctx(
+        kb=base.kb,
+        directory=base.dir,
+        company_id=profile["company_id"],
+        role="CEO",
+        item=item,
+        profile=profile,
+        ev=ev,
+        topics={},
+    )
+
+    agent._adapt(insight, failed, ctx, ev, item, Trace())
+
+    assert insight["consequences"]["risks"] == []
+    assert insight["confidence"] == "low"
+    assert insight["data_gaps"]
+
+
+def test_semantic_grounding_preserves_transport_claim_with_direct_evidence():
+    from services.insight.agent import InsightAgent
+    from services.insight.evidence import EvidenceBook
+
+    base = svc()
+    agent = InsightAgent(base.kb, base.dir, base.ranker, None, base.s)
+
+    item = {
+        "id": "transport-cost-rise",
+        "title": "Перевозчик повысил тарифы",
+        "text": "Стоимость перевозок выросла на 8% из-за повышения тарифов перевозчика.",
+        "kind": "news",
+        "unconfirmed": False,
+        "stale": False,
+        "injection": False,
+    }
+
+    ev = EvidenceBook()
+    evidence_id = ev.news(item, item["text"])
+
+    profile = base.dir.profile("U_212593")
+    insight = {
+        "consequences": {
+            "risks": [{
+                "index": 0,
+                "title": "Стоимость перевозок выросла",
+                "text": "Источник прямо сообщает о повышении тарифов перевозчика.",
+                "evidence": [evidence_id],
+                "hypothesis": False,
+                "lens": "sector:logistics_cost",
+            }],
+            "opportunities": [],
+            "notes": [],
+        },
+        "what_happened": {"key_facts": []},
+        "bank_view": {"indicators": []},
+        "confidence": "high",
+        "data_gaps": [],
+    }
+
+    checks = agent.verify(insight, ev, item, profile)
+
+    assert not any(
+        check["code"] == "semantic_grounding"
+        and check["status"] == "fail"
+        for check in checks
+    ), checks
+
+
 def test_llm_failure_falls_back_to_rules():
     from services.insight.agent import InsightAgent
     base = svc()
@@ -422,6 +647,66 @@ def test_playbooks_need_grounding_in_event_text():
     assert found and taxes["title"] == found[0].title
 
 
+def test_food_cost_playbook_rejects_food_price_decreases():
+    from services.insight.lenses import Ctx, lens_playbooks
+    from services.insight.evidence import EvidenceBook
+
+    base = svc()
+    company_id = "U_212593"
+    profile = base.dir.profile(company_id)
+    item = {
+        "id": "food-price-mixed",
+        "title": "Инфляция за неделю",
+        "text": (
+            "За неделю цены на продукты снизились на 0,08%, "
+            "овощи — на 1,72%. "
+            "Непродовольственные товары подорожали на 0,23%, "
+            "бензин — на 0,91%. "
+            "Услуги туризма подешевели на 1,73%."
+        ),
+        "industries": {"okved_prefixes": []},
+        "regions": [],
+        "topic_scores": {"food_prices": 0.8},
+    }
+    ctx = Ctx(
+        base.kb, base.dir, company_id, "ceo",
+        item, profile, EvidenceBook(), {"food_prices": 0.8},
+    )
+
+    found = [
+        f for f in lens_playbooks(ctx)
+        if f.lens == "sector:food_cost"
+    ]
+    assert not found, "Снижение цен на продукты не должно создавать риск их удорожания"
+
+
+def test_logistics_cost_playbook_requires_transport_cost_evidence():
+    from services.insight.lenses import Ctx, lens_playbooks
+    from services.insight.evidence import EvidenceBook
+
+    base = svc()
+    company_id = "U_212593"
+    profile = base.dir.profile(company_id)
+    item = {
+        "id": "fuel-only",
+        "title": "Изменение цен на топливо",
+        "text": "За неделю бензин подорожал на 0,91%.",
+        "industries": {"okved_prefixes": []},
+        "regions": [],
+        "topic_scores": {"fuel_prices": 0.8},
+    }
+    ctx = Ctx(
+        base.kb, base.dir, company_id, "ceo",
+        item, profile, EvidenceBook(), {"fuel_prices": 0.8},
+    )
+
+    found = [
+        f for f in lens_playbooks(ctx)
+        if f.lens == "sector:logistics_cost"
+    ]
+    assert not found, "Рост цен на бензин сам по себе не доказывает рост стоимости перевозок"
+
+
 def test_feed_shows_only_news_with_company_specific_conclusion():
     base = svc()
     u = user()
@@ -499,6 +784,57 @@ def test_lenses_tolerate_unknown_levels_and_do_not_claim_fts_without_data():
     texts = [f.text for f in lens_fx(c)]
     assert texts and all("присутствует в данных ФТС" not in t for t in texts), texts
     assert "Данных ФТС" in texts[0]
+
+
+def test_fx_lens_rejects_weak_fx_topic_signal():
+    from services.insight.lenses import lens_fx
+
+    c = _ctx_with_factor(
+        "fx_and_trade_exposure",
+        "low",
+        {"fx_rates": 0.05},
+    )
+
+    findings = lens_fx(c)
+
+    assert not any(f.lens == "fx" for f in findings), findings
+
+
+def test_fx_actions_are_personalized_by_role():
+    from services.insight.agent import InsightAgent
+    from services.insight.lenses import Finding
+
+    roles = ("ceo", "cfo", "chief_accountant", "treasury")
+    finding = Finding(
+        lens="fx",
+        direction="risk",
+        severity="medium",
+        title="Проверка валютного сценария",
+        text="Гипотетический валютный риск требует проверки экспозиции компании.",
+        evidence=[],
+        features=[],
+        confidence="low",
+        horizon="до конца 2026 г.",
+        hypothesis=True,
+        company_specific=False,
+        actions=[
+            {
+                "title": "Проверить валютную позицию",
+                "text": "Сопоставить операции компании с валютным сценарием.",
+                "kind": "analysis",
+                "product": None,
+            }
+        ],
+    )
+
+    agent = svc().agent
+    results = {
+        role: agent._actions([finding], ["fx_rates"], role)[0]
+        for role in roles
+    }
+
+    assert len({action["title"] for action in results.values()}) == 4
+    assert len({action["text"] for action in results.values()}) == 4
 
 
 def test_user_added_news_is_not_marked_synthetic():

@@ -304,7 +304,7 @@ class InsightAgent:
         headline = (("Не подтверждено: " if item.get("unconfirmed") else "") + (top.title if top else item["title"]))
         sev = top.severity if top else "low"
         conf = "low" if (item.get("unconfirmed") or (top and top.hypothesis)) else (top.confidence if top else "low")
-        actions = self._actions(findings, topics)
+        actions = self._actions(findings, topics, role)
         offer = self._offer(findings)
         gaps = self._gaps(profile, findings)
         if not bank_items:
@@ -362,14 +362,66 @@ class InsightAgent:
                 out.append({"statement": txt, "origin": "company_data" if comp.code in ("industry", "region") else "rule", "evidence": eids, "component": comp.code, "strength": round(comp.value, 2)})
         return out
 
-    def _actions(self, findings: list[Finding], topics: list[str]) -> list[dict]:
+    def _actions(
+        self,
+        findings: list[Finding],
+        topics: list[str],
+        role: str = "other",
+    ) -> list[dict]:
         out, seen = [], set()
+        role_fx_actions = {
+            "ceo": {
+                "title": "Оценить влияние валютного сценария на бизнес",
+                "text": (
+                    "Сопоставить возможное изменение курса с планом закупок, "
+                    "ценами и финансовыми целями. Не считать валютную экспозицию "
+                    "подтверждённой без проверки структуры операций компании."
+                ),
+            },
+            "cfo": {
+                "title": "Проверить валютный риск финансового плана",
+                "text": (
+                    "Оценить возможное влияние курса на денежные потоки, "
+                    "маржинальность и бюджет; сопоставить сценарии с финансовым "
+                    "планом и подтвердить фактическую валютную экспозицию."
+                ),
+            },
+            "chief_accountant": {
+                "title": "Проверить учёт валютных операций",
+                "text": (
+                    "Проверить применимость правил учёта валютных операций "
+                    "и курсовых разниц к операциям компании. Не предполагать "
+                    "наличие таких операций без проверки первичных документов."
+                ),
+            },
+            "treasury": {
+                "title": "Сверить валютную позицию и календарь платежей",
+                "text": (
+                    "Проверить валюты, суммы и даты предстоящих платежей, "
+                    "планируемые конвертации и доступную ликвидность. "
+                    "Сопоставить фактическую позицию с валютным сценарием."
+                ),
+            },
+        }
+
         for f in findings:
             for a in f.actions:
-                if a["title"] in seen or (f.severity == "low" and a["kind"] == "product"):
+                action = a
+
+                if (
+                    f.lens == "fx"
+                    and a.get("kind") == "analysis"
+                    and role in role_fx_actions
+                ):
+                    action = {**a, **role_fx_actions[role]}
+
+                if action["title"] in seen or (
+                    f.severity == "low" and action["kind"] == "product"
+                ):
                     continue
-                seen.add(a["title"])
-                out.append({**a, "severity": f.severity, "origin": "ai"})
+
+                seen.add(action["title"])
+                out.append({**action, "severity": f.severity, "origin": "ai"})
         meet = next(iter(self.kb.calendar()), None)        # ближайшее заседание по материалам банка, относительно опорной даты
         if meet and any(t in topics for t in ("key_rate", "bond_market", "deposit_rates")):
             expect = f"{meet['detail']} на этом заседании. " if "ожидает" in (meet.get("detail") or "") else ""
@@ -545,6 +597,86 @@ class InsightAgent:
         missing = [e for f in all_f for e in f["evidence"] if e not in ids]
         add("evidence_exist", not missing, "все ссылки на доказательства существуют" if not missing else f"нет доказательств: {missing}")
         add("grounded", all(f["evidence"] for f in all_f), "каждый вывод связан с источником" if all(f["evidence"] for f in all_f) else "есть выводы без источников")
+        transport_claims_without_support = []
+
+        fuel_words = (
+            "бензин",
+            "дизел",
+            "топлив",
+            "горюч",
+        )
+        transport_words = (
+            "перевоз",
+            "доставк",
+            "логист",
+            "фрахт",
+            "транспорт",
+        )
+        increase_words = (
+            "вырос",
+            "увелич",
+            "подорож",
+            "повыс",
+            "рост",
+            "увеличен",
+            "возрос",
+        )
+
+        for finding in all_f:
+            lens = str(finding.get("lens") or "").lower()
+            if "logistics_cost" not in lens:
+                continue
+
+            claim_text = (
+                str(finding.get("title") or "")
+                + " "
+                + str(finding.get("text") or "")
+            ).lower()
+
+            claims_transport_increase = (
+                any(word in claim_text for word in transport_words)
+                and any(word in claim_text for word in increase_words)
+            )
+
+            if not claims_transport_increase:
+                continue
+
+            evidence_texts = []
+            for evidence_id in finding.get("evidence", []):
+                evidence = ev.get(evidence_id)
+                if evidence:
+                    evidence_texts.append(
+                        str(evidence.get("text") or "").lower()
+                    )
+
+            combined_evidence = " ".join(evidence_texts)
+
+            fuel_only = (
+                any(word in combined_evidence for word in fuel_words)
+                and not (
+                    any(word in combined_evidence for word in transport_words)
+                    and any(word in combined_evidence for word in increase_words)
+            )
+            )
+
+            if fuel_only:
+                transport_claims_without_support.append(
+                    str(finding.get("title") or "Вывод о транспортных расходах")
+                )
+
+        add(
+            "semantic_grounding",
+            not transport_claims_without_support,
+            (
+                "Выводы о росте транспортных расходов подтверждаются источниками."
+                if not transport_claims_without_support
+                else (
+                    "Источники подтверждают изменение цен на топливо, "
+                    "но не рост стоимости перевозок: "
+                    + "; ".join(transport_claims_without_support)
+                )
+            ),
+        )
         allowed = ev.all_numbers() | set(numbers(item["title"] + " " + item["text"])) | set(numbers(str(profile["size"]["workers_fns"]["value"] or "")))
         badnums = []
         for f in all_f:
@@ -608,6 +740,88 @@ class InsightAgent:
                 ins["data_gaps"].append("Прямую связь события с признаками компании установить не удалось: вывод общий, уверенность низкая.")
                 tr.add("adapt", "broaden_search", "расширен поиск по материалам банка: " + (f"добавлено близких по теме фрагментов — {len(hits[:2])}" if hits else "близких по теме фрагментов нет")
                        + "; уверенность снижена до «низкой»")
+            elif code == "semantic_grounding":
+                removed = 0
+
+                fuel_words = (
+                    "бензин",
+                    "дизел",
+                    "топлив",
+                    "горюч",
+                )
+                transport_words = (
+                    "перевоз",
+                    "доставк",
+                    "логист",
+                    "фрахт",
+                    "транспорт",
+                )
+                increase_words = (
+                    "вырос",
+                    "увелич",
+                    "подорож",
+                    "повыс",
+                    "рост",
+                    "возрос",
+                )
+
+                for list_name in ("risks", "opportunities", "notes"):
+                    findings = ins["consequences"][list_name]
+                    kept = []
+
+                    for finding in findings:
+                        lens = str(finding.get("lens") or "").lower()
+                        claim_text = (
+                            str(finding.get("title") or "")
+                            + " "
+                            + str(finding.get("text") or "")
+                        ).lower()
+
+                        if (
+                            "logistics_cost" not in lens
+                            or not any(w in claim_text for w in transport_words)
+                            or not any(w in claim_text for w in increase_words)
+                        ):
+                            kept.append(finding)
+                            continue
+
+                        evidence_texts = []
+                        for evidence_id in finding.get("evidence", []):
+                            evidence = ev.get(evidence_id)
+                            if evidence:
+                                evidence_texts.append(
+                                    str(evidence.get("text") or "").lower()
+                                )
+
+                        source_text = " ".join(evidence_texts)
+
+                        fuel_only = (
+                            any(w in source_text for w in fuel_words)
+                            and not (
+                                any(w in source_text for w in transport_words)
+                                and any(w in source_text for w in increase_words)
+                            )
+                        )
+
+                        if fuel_only:
+                            removed += 1
+                            tr.add(
+                                "adapt",
+                                "remove_unsupported_transport_claim",
+                                "Удалён вывод о росте транспортных расходов, "
+                                "не подтверждённый источниками.",
+                            )
+                        else:
+                            kept.append(finding)
+
+                    ins["consequences"][list_name] = kept
+
+                if removed:
+                    ins["confidence"] = "low"
+                    ins.setdefault("data_gaps", []).append(
+                        "Источники не подтверждают рост транспортных расходов "
+                        "на основании одного лишь изменения цен на топливо."
+                    )
             elif code == "bank_attribution":
                 for lst in ("risks", "opportunities", "notes"):
                     for r in ins["consequences"][lst]:

@@ -259,7 +259,12 @@ def lens_fx(c: Ctx) -> list[Finding]:
     sev = {"high": "high", "medium": "medium"}.get(lvl, "low")
     in_fts = bool(c.countries) or c.profile["foreign_trade"]["fts_flag"]["value"] is True
     fx_text = not (c.item and c.item.get("kind") == "news") or c.text_has(r"курс|рубл|доллар|юан|евро|валют")
-    if c.has("fx_rates") and lvl not in ("none", "unknown") and fx_text:
+    if (
+        c.has("fx_rates")
+        and float(c.topics.get("fx_rates") or 0) >= 0.2
+        and lvl not in ("none", "unknown")
+        and fx_text
+    ):
         fc = ""
         if u26 and u27 and c26 and c27:
             trend = ("ожидается постепенное ослабление рубля" if u27["value"] > u26["value"] else
@@ -481,9 +486,39 @@ def lens_playbooks(c: Ctx) -> list[Finding]:
             continue
         if pb.get("need_hint") and hint != pb["need_hint"]:
             continue
+
         need_text = pb.get("need_text") or []
         if any(not c.text_has(p) for p in ([need_text] if isinstance(need_text, str) else need_text)):
-            continue                      # утверждения сценария должны опираться на текст самого события
+            continue
+
+        # Не выводим рост цен на продукты, если в статье явно говорится об их снижении.
+        if pb["id"] in {"food_cost", "food_wholesale"}:
+            food_down = (
+                r"(мяс|молоч|овощ|продукт|продовольств|сахар|круп|подсолнечн)"
+                r"\w*[^.]{0,60}(сниз|подешев|упал|паден|сократ)"
+                r"|"
+                r"(сниз|подешев|упал|паден|сократ)\w*[^.]{0,60}"
+                r"(цен|мяс|молоч|овощ|продукт|продовольств)"
+            )
+            if c.text_has(food_down):
+                continue
+
+        # Одного роста цен на бензин недостаточно для вывода о подорожании доставки.
+        if pb["id"] == "logistics_cost":
+            transport_cost_up = (
+                r"(перевоз|доставк|логист|фрахт|транспортн)"
+                r"\w*[^.]{0,60}(подорож|дорож|рост|вырос|повыш|увелич)"
+                r"|"
+                r"(подорож|дорож|рост|вырос|повыш|увелич)\w*"
+                r"[^.]{0,60}(перевоз|доставк|логист|фрахт|транспортн)"
+                r"|"
+                r"(тариф|стоимост)\w*[^.]{0,60}"
+                r"(перевоз|доставк|логист|фрахт|транспортн)"
+                r"[^.]{0,60}(повыш|увелич|подорож|вырос)"
+            )
+            if not c.text_has(transport_cost_up):
+                continue
+
         pct = c.pct_phrase()
         anc, eanc = c.anchor(pb["anchor"]) if pb.get("anchor") else (None, None)
         txt = pb["text"].format(

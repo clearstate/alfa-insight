@@ -32,7 +32,7 @@ CHECK_TITLES = {"evidence_exist": "Ссылки на источники суще
                 "bank_attribution": "Позиции банка приписаны только по его материалам",
                 "coverage": "Вывод связан с данными компании", "rumor_not_fact": "Слухи не поданы как факт",
                 "forecast_versions": "Использованы актуальные прогнозы банка", "source_fresh": "Источник актуален",
-                "injection_clean": "Нет скрытых инструкций для AI"}
+                "injection_clean": "Нет скрытых инструкций для AI", "semantic_grounding": "Смысл выводов соответствует источникам"}
 STEP_TITLES = {"plan": "План анализа", "get_company_profile": "Профиль компании", "get_news_item": "Материал события",
                "get_cluster": "Другие публикации о событии", "get_bank_positions": "Позиции банка",
                "get_indicators": "Оценка влияния с прогнозами банка", "match_supply_chain": "Отрасли контрагентов",
