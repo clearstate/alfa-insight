@@ -261,7 +261,6 @@ python scripts/ui_e2e.py http://localhost:8080/   # сквозной UI-тест
 
 | Документ | О чём |
 |---|---|
-| [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | Сценарий демонстрации |
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | Публикация на сервере |
 | [`docs/architecture.md`](docs/architecture.md) | Архитектура |
 | [`docs/MONITORING_AND_SCALING.md`](docs/MONITORING_AND_SCALING.md) | Метрики, мониторинг, масштабирование |
